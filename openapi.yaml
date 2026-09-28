@@ -1,0 +1,106 @@
+openapi: 3.1.0
+info:
+  title: pm
+  version: 0.1.0
+  description: >
+    動画プロジェクトの PM。9 要素（neta / script / tts / prompt / image / se / mux / deploy / metrics）を
+    台帳と成果物ファイルから検査し、進捗・次の一手・抜けを出す。**作らない・投稿しない**（実処理は各 repo）。
+    この spec が CLI の界面の正。実装は ~/.skills/project-manager。
+x-cli:
+  command: pm
+  detect: command -v pm && test -f ~/.skills/project-manager/pm.ts
+  repo: ~/.skills/project-manager
+  runtime: bun
+  install: bash ~/.skills/project-manager/scripts/install.sh
+  requires: [bun, ffmpeg]
+  optional: [gh, wslview]
+  scripts:
+    pm: pm.ts
+    video-ontology: ontology.ts
+    dash: dash.ts
+    diagram: diagram.ts
+    board: board.ts
+  env:
+    VIDEOMAN_JSONL: 台帳（canonical）の差し替え。既定 ~/.skills/project-manager/data/videos.jsonl
+    VIDEOMAN_TRACKER: 起票先 tracker（既定 bonsai/kanalvideo-analysis）
+  exit:
+    0: 成功
+    1: 失敗（slug が見つからない等。stderr へ）
+    2: 不明なコマンド
+servers:
+  - url: local
+    description: ローカル実行（argv をそのまま渡す）
+tags:
+  - {name: audit, description: 9 要素の検査}
+  - {name: report, description: ダッシュボード（HTML）}
+  - {name: ontology, description: 動画ドメインのオントロジ（派生 DB）}
+paths:
+  /:
+    get:
+      operationId: matrix
+      summary: 全プロジェクトのマトリクス（本 × 9 要素）と工程別の未完
+      tags: [audit]
+      responses: {'200': {description: マトリクスを stdout へ}}
+  /plan:
+    post:
+      operationId: plan
+      summary: 進捗と残タスク（工程別 → 担当）
+      tags: [audit]
+      parameters:
+        - {name: json, in: query, schema: {type: boolean}, x-cli: {flag: --json}}
+      responses: {'200': {description: テキスト、または --json で機械可読 JSON}}
+  /wf:
+    get:
+      operationId: wf
+      summary: WF 一覧、または工程ボード（script = 台本部 seed/review/done）
+      tags: [audit]
+      parameters:
+        - {name: id, in: query, schema: {type: string}, x-cli: {positional: 1}}
+      responses: {'200': {description: 一覧またはボード}}
+  /{slug}:
+    get:
+      operationId: detail
+      summary: 1 本の詳細（9 要素の ✅/・ と次の一手）
+      tags: [audit]
+      parameters:
+        - {name: slug, in: path, required: true, schema: {type: string}, x-cli: {positional: 1}}
+      responses: {'200': {description: 詳細}, '1': {description: 見つからない}}
+  /dashboards:
+    post:
+      operationId: dashboards
+      summary: progress / pipeline / script の HTML を生成してブラウザで開く
+      tags: [report]
+      parameters:
+        - {name: no-open, in: query, schema: {type: boolean}, x-cli: {flag: --no-open}}
+      responses: {'200': {description: 生成したパス（--no-open なら開かない）}}
+  /index:
+    post:
+      operationId: index
+      summary: 3 枚をタブで束ねた index.html を生成して開く
+      tags: [report]
+      parameters:
+        - {name: no-open, in: query, schema: {type: boolean}, x-cli: {flag: --no-open}}
+      responses: {'200': {description: index.html を開く}}
+  /ontology/build:
+    post:
+      operationId: ontologyBuild
+      summary: 動画ドメインのオントロジ（data/video-ontology.db）を作り直す
+      tags: [ontology]
+      x-cli: {command: video-ontology}
+      responses: {'200': {description: nodes / edges / 到達セルの件数}}
+  /ontology/q:
+    get:
+      operationId: ontologyQuery
+      summary: 代表クエリ（progress / missing / next / cast / keys …）か任意 SQL を実行
+      tags: [ontology]
+      x-cli: {command: video-ontology}
+      parameters:
+        - {name: name-or-sql, in: query, required: true, schema: {type: string}, x-cli: {positional: 1}}
+      responses: {'200': {description: TSV}}
+  /ontology/queries:
+    get:
+      operationId: ontologyQueries
+      summary: 代表クエリの一覧
+      tags: [ontology]
+      x-cli: {command: video-ontology}
+      responses: {'200': {description: 名前と SQL}}

@@ -18,6 +18,8 @@
 | `data/SCHEMA.md` — 型・status 語彙・命名規則 | 移設済み |
 | `dash.ts` — `progress.html`（本 × 9 工程 + 未達 + キャスト）+ `index.html`（タブ束ね） | 実走確認済み |
 | `pm dashboards` / `pm index` — 3 枚を生成してブラウザで開く（`--no-open` あり） | 実走確認済み（Chrome が progress.html を開いた） |
+| `scripts/install.sh` — `~/.local/bin/pm` と `video-ontology` を張る | 実走確認済み（`pm` / `video-ontology` が PATH から動く） |
+| `openapi.yaml` — CLI 界面の正（`~/.skills/cli/registry/pm.yaml` が symlink） | あり |
 | `diagram.ts` / `board.ts` / `pipeline.html` / `script.html` | 生成物 |
 | `state/nvidia-ok.json` — 使える NVIDIA モデル一覧 | あり |
 | remote `bonsai/project-manager` | push 済み |
@@ -43,6 +45,7 @@
 
 ## ISSUE_LOG
 
+- 2026-09-29 `openapi.yaml` を追加し、`~/.local/bin/pm` / `video-ontology` を張る `scripts/install.sh` を追加。壊れていた `~/.skills/cli/registry/videoman.yaml` も貼り直した。
 - 2026-09-29 `pm dashboards` / `pm index` を追加（`videoman dashboards` と同じ流儀: 生成 → 開く）。`dash.ts` が進捗マトリクスを HTML 化。Chrome での実オープンを確認。
 - 2026-09-29 動画ドメインのオントロジを追加（`ontology.ts` + `data/video-ontology.sql` + `data/queries.sql`）。工程判定を `lib/stages.ts` に抽出し pm.ts と共有。
 - 2026-09-29 台帳 `videos.jsonl` + `SCHEMA.md` を `kanalvideo-analysis/pipeline/` から `data/` へ移設し、videoman の既定パスを更新（統合管理）。PM/videoman の実走で確認。

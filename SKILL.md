@@ -23,10 +23,19 @@ neta(ネタワード) → script(台本) → tts(読み上げ) → prompt(画像
   videoman は `src/config.ts` の既定でこのパスを見る（旧 `kanalvideo-analysis/pipeline/` から 2026-09-29 に移設）。
 - 成果物は `wf.yaml` の `roots` × `artifacts` を glob して見る（ファイルの有無が状態）。
 
+## インストール
+
+```bash
+bash ~/.skills/project-manager/scripts/install.sh   # ~/.local/bin/pm と video-ontology を張る
+```
+
+界面の正は `openapi.yaml`（CLI registry からは `~/.skills/cli/registry/pm.yaml` が symlink）。
+
 ## 使い方
 
 ```bash
-bun ~/.skills/project-manager/pm.ts            # 全プロジェクトのマトリクス（9 要素）
+pm                                             # 全プロジェクトのマトリクス（9 要素）
+video-ontology q missing                       # 工程別の未達（オントロジ）
 bun ~/.skills/project-manager/pm.ts <slug>     # 1 本の詳細 + 次の一手
 bun ~/.skills/project-manager/pm.ts wf script  # 台本部ボード（seed / review / done）
 bun ~/.skills/project-manager/pm.ts wf         # WF 一覧
