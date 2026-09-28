@@ -35,7 +35,7 @@ wfs:
   - id: script
     name: 台本
     library: script
-    produces: '<series>/#NN-<slug>.md' + サムネプロンプト（同時）
+    produces: "台本 <series>/#NN-<slug>.md + サムネプロンプト（同時）"
     labels: [wf:script, series:<series>]
     gate: 600-700字（90秒）/ RUBRIC 9軸 / サムネプロンプトに aspect 指定
     states: [seed, review, done]
@@ -58,7 +58,7 @@ wfs:
     agent: lumiere
   - id: image
     name: 画像
-    produces: 'images/*.png' + サムネ（aspect はタイプ）
+    produces: "images/*.png + サムネ（aspect はタイプ）"
     labels: [wf:image]
     gate: 全枚数・文字を焼いていない・タイプの aspect
     who: agent
