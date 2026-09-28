@@ -1,49 +1,65 @@
 # casting.yaml — 誰に・どのモデルで・どの鍵で頼むか（動画タイプ別のキャスト表）
 #
+# 方針（policy）:
+#   provider free（sakura / nvidia / opencode）でこなす。
+#   deepseek は**有料**なので最後の要（無料で足りない時だけ）。使ったら理由を残す。
+#
 # 書き方（テンプレ）:
 #   defaults.<wf>:       全タイプ共通の既定
 #   types.<type>.use:    そのタイプで使う工程（順は wf.yaml の flow）
-#   types.<type>.cast:   既定の上書き（agent / model / token）
+#   types.<type>.cast:   既定の上書き（agent / model / engine / token）
 #
-# 規則:
-#   - token は **env 名だけ**書く。値は書かない（鍵は repo に置かない）。
-#   - model は opencode の provider/model 形式（例 opencode-go/grok-4.5, sakura, deepseek/...）。
-#   - agent は ~/.config/opencode/agents/<agent>.md の名前。
+# 軸:
+#   model  = エージェントを動かす LLM（sakura / nvidia / opencode …）
+#   engine = 呼ぶサービス（tts=sakura, image=cf-flux, qc=nvidia-nim …）
+#   token  = **env 名だけ**（値は書かない）
 version: 1
 updated: 2026-09-28
 
+policy:
+  prefer: [sakura, nvidia, opencode] # free
+  paid_last: [deepseek] # 有料。最後の要
+
 # ── 既定（全タイプ共通） ──────────────────────────────
 defaults:
-  pm:      { agent: pm,         model: opencode-go/kimi-k3, token: OPENCODE_API_KEY }
-  script:  { agent: lumiere,    model: opencode-go/grok-4.5, token: OPENCODE_API_KEY }
-  tts:     { agent: sakura-tts, model: sakura,              token: SAKURA_API_KEY }
-  image:   { agent: image-gen,  model: cf-flux,             token: "" } # wrangler OAuth
-  se:      { agent: se-synth,   model: local,               token: "" }
-  mux:     { agent: lumiere,    model: local,               token: "" }
-  metrics: { agent: metrics,    model: yt-dlp,              token: "" }
-  qc:      { agent: qc,         model: nvidia-nim,          token: NVIDIA_API_KEY }
+  pm:      { agent: pm,         model: opencode-go/kimi-k3,        token: OPENCODE_API_KEY }
+  script:  { agent: lumiere,    model: sakura/preview/Kimi-K2.7-Code, token: SAKURA_API_KEY }
+  tts:     { agent: sakura-tts, model: sakura/preview/Kimi-K2.7-Code, engine: sakura-tts, token: SAKURA_API_KEY }
+  image:   { agent: image-gen,  model: opencode-go/kimi-k3,        engine: cf-flux, token: "" } # wrangler OAuth
+  se:      { agent: se-synth,   model: opencode-go/kimi-k3,        engine: local,  token: "" }
+  mux:     { agent: lumiere,    model: opencode-go/kimi-k3,        engine: ffmpeg, token: "" }
+  metrics: { agent: metrics,    model: opencode-go/kimi-k3,        engine: yt-dlp, token: "" }
+  qc:      { agent: qc,         model: nvidia-nim,                 engine: nvidia-nim, token: NVIDIA_API_KEY }
 # メモ: 文字起こし（stt / deepgram / DEEPGRAM_API_KEY）は別プロジェクト
 #   ~/.skills/SHITAGAKI（下書き）で使う。ここ（動画）では tts（Sakura）を使う。
 
 # ── 動画タイプ別 ──────────────────────────────────────
 types:
   essay: # 知恵の館・横 long（エッセイ朗読）
+    aspect: '16:9' # 1920x1080（横）
     use: [script, tts, mux, deploy, metrics]
-    cast:
-      script: { model: deepseek/deepseek-chat } # 長文は deepseek
   short: # 縦 Short（video-gen）
+    aspect: '9:16' # 1080x1920（縦）
     use: [script, tts, image, mux, deploy, metrics]
-    cast:
-      script: { model: opencode-go/kimi-k3 }
   koma: # 哲学四コマ（4koma-video）
+    aspect: '1:1' # 1080x1080（スクエア）
     use: [script, image, tts, se, mux, deploy, metrics]
   explainer: # repo 解説（research → article → speech → tts → video）
+    aspect: '16:9' # 1920x1080（横）
     use: [neta, script, tts, image, mux, deploy, metrics]
     cast:
-      script: { agent: lumiere, model: opencode-go/grok-4.5 }
+      script: { agent: lumiere, model: opencode-go/kimi-k3 }
+
+# アスペクト注意（サムネ・画像・動画で揃える）:
+#   short = 9:16（1080x1920）/ essay・explainer = 16:9（1920x1080）/ koma = 1:1（1080x1080）
+#   → サムネプロンプトは台本と同時に、**aspect を明記して**依頼する。
+
+# deepseek（有料）を使うときの書き方（最後の要）:
+#   cast:
+#     <wf>: { model: deepseek/deepseek-chat, why: "無料で尺/品質が足りない" }
 
 # ── 新タイプを足すとき（雛形） ────────────────────────
 #   <type>:
 #     use: [script, tts, mux, deploy, metrics]
 #     cast:
-#       <wf>: { agent: <name>, model: <provider/model>, token: <ENV> }
+#       <wf>: { agent: <name>, model: <provider/model>, engine: <service>, token: <ENV> }
