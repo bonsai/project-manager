@@ -29,7 +29,7 @@ defaults:
   se:      { agent: se-synth,   model: opencode-go/kimi-k3,        engine: local,  token: "" }
   mux:     { agent: lumiere,    model: opencode-go/kimi-k3,        engine: ffmpeg, token: "" }
   metrics: { agent: metrics,    model: opencode-go/kimi-k3,        engine: yt-dlp, token: "" }
-  qc:      { agent: qc,         model: nvidia-nim,                 engine: nvidia-nim, token: NVIDIA_API_KEY }
+  qc:      { agent: qc,         model: nvidia/meta/llama-3.2-90b-vision-instruct, engine: nvidia-nim, token: NVIDIA_API_KEY }
 # メモ: 文字起こし（stt / deepgram / DEEPGRAM_API_KEY）は別プロジェクト
 #   ~/.skills/SHITAGAKI（下書き）で使う。ここ（動画）では tts（Sakura）を使う。
 
