@@ -30,6 +30,8 @@ bun ~/.skills/project-manager/pm.ts            # 全プロジェクトのマト�
 bun ~/.skills/project-manager/pm.ts <slug>     # 1 本の詳細 + 次の一手
 bun ~/.skills/project-manager/pm.ts wf script  # 台本部ボード（seed / review / done）
 bun ~/.skills/project-manager/pm.ts wf         # WF 一覧
+bun ~/.skills/project-manager/pm.ts dashboards  # 進捗/工程図/台本部 の HTML を作って開く（--no-open で生成のみ）
+bun ~/.skills/project-manager/pm.ts index       # 3 枚をタブで束ねた index.html を開く
 ```
 
 ## オントロジ（動画ドメイン）
@@ -66,8 +68,10 @@ bun ~/.skills/project-manager/ontology.ts q "SELECT * FROM v_next LIMIT 5"
 - `data/video-ontology.sql` — そのスキーマ。`data/queries.sql` — 代表クエリ
 - `diagram.ts` — `wf.yaml`/`casting.yaml` から `pipeline.html`（Mermaid の図）を生成
 - `board.ts` — 台本部（script WF）を `script.html` にする（seed / PR / issue / 完成）
-- `pipeline.html` / `script.html` — 生成物
+- `dash.ts` — 進捗ダッシュボード（`progress.html`）と束ねた `index.html` を生成
+- `progress.html` / `pipeline.html` / `script.html` / `index.html` — 生成物（`pm dashboards` / `pm index` が作って開く）
 - `pipeline.html` — パイプラインの図（工程・orchestration・キャスト・タイプ・WF↔repo）
+- `progress.html` — 本 × 9 工程のマトリクス・到達率・工程別の未達・キャスト表
 - `wf.yaml` — 9 要素の定義・roots・成果物パターン・WF↔repo
 - `data/videos.jsonl` — 台帳（canonical）。`data/SCHEMA.md` — そのスキーマ
 - `state/` — 生成キャッシュ（nvidia-ok.json 等）

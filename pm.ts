@@ -7,6 +7,8 @@
 //   pm              全プロジェクトのマトリクス（9 要素）
 //   pm <slug>       1 本の詳細 + 次の一手
 //   pm wf [id]      工程ボード（script = 台本部: seed/review/done）
+//   pm dashboards   進捗 / 工程図 / 台本部 の HTML を作って開く（--no-open で生成だけ）
+//   pm index        3 枚を束ねた index.html を作って開く
 //
 // 定義は同じディレクトリの wf.yaml、台帳は data/videos.jsonl（env VIDEOMAN_JSONL で差し替え）。
 import { existsSync, readdirSync, statSync, readFileSync } from "node:fs";
@@ -71,6 +73,39 @@ function boardScript(lib: { path: string; repo: string; seed?: string; done?: st
   }
 }
 
+// ── ダッシュボード（progress / pipeline / script）を生成してブラウザで開く
+const DASH_PAGES: Array<[string, string]> = [
+  ["progress", "progress.html"],
+  ["pipeline", "pipeline.html"],
+  ["script", "script.html"],
+];
+
+function winPath(p: string): string {
+  const r = Bun.spawnSync(["wslpath", "-w", p], { stdout: "pipe", stderr: "ignore" });
+  const out = new TextDecoder().decode(r.stdout).trim();
+  return out || p;
+}
+
+function openInBrowser(p: string): boolean {
+  const win = winPath(p);
+  const candidates: string[][] = [["wslview", p], ["explorer.exe", win], ["cmd.exe", "/c", "start", "", win], ["xdg-open", p]];
+  for (const cmd of candidates) {
+    if (!Bun.which(cmd[0]!)) continue;
+    try { Bun.spawn(cmd, { stdout: "ignore", stderr: "ignore" }); return true; } catch { /* 次の候補 */ }
+  }
+  return false;
+}
+
+function buildDashboards(): void {
+  for (const gen of ["diagram.ts", "board.ts", "dash.ts"]) {
+    const r = Bun.spawnSync([process.execPath, join(HERE, gen)], { stdout: "ignore", stderr: "pipe" });
+    if (r.exitCode !== 0) {
+      console.error(`生成失敗: ${gen}\n${new TextDecoder().decode(r.stderr)}`);
+      process.exit(1);
+    }
+  }
+}
+
 const [sub, arg] = process.argv.slice(2);
 
 if (sub === "plan") {
@@ -110,6 +145,20 @@ if (sub === "plan") {
     if (n) console.log(`  ${id.padEnd(8)} ${(nameOf.get(id) ?? "").padEnd(6)} ${String(n).padStart(2)} 件   ${who(id)}`);
   }
   console.log(`\ntracker: ${doc.tracker ?? "（未設定）"}  → 起票は orchestrator`);
+} else if (sub === "dashboards") {
+  buildDashboards();
+  const noOpen = process.argv.includes("--no-open");
+  for (const [name, file] of DASH_PAGES) {
+    const p = join(HERE, file);
+    if (!existsSync(p)) { console.log(`なし  ${name}: ${p}`); continue; }
+    console.log(`o ${name}: ${p}`);
+    if (!noOpen) openInBrowser(p);
+  }
+} else if (sub === "index") {
+  buildDashboards();
+  const p = join(HERE, "index.html");
+  if (process.argv.includes("--no-open")) console.log(`wrote ${p}`);
+  else console.log(openInBrowser(p) ? `opened ${p}` : `open できず。file: ${p}`);
 } else if (sub === "wf") {
   if (!arg) {
     console.log("WF 一覧:");
