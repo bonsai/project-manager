@@ -42,7 +42,41 @@ bun ~/.skills/project-manager/pm.ts wf         # WF 一覧
 ## ファイル
 
 - `pm.ts` — 検査本体（bun）
-- `wf.yaml` — 9 要素の定義・roots・成果物パターン
+- `wf.yaml` — 9 要素の定義・roots・成果物パターン・WF↔repo
+- `casting.yaml` — 誰に・どのモデルで・どの鍵で（動画タイプ別のキャスト表）
+
+## キャスト表（誰に・どのモデルで・どの鍵で）
+
+`casting.yaml` が正。動画タイプ（`types.<type>.use`）で使う工程を選び、`cast` で上書きする。
+
+| 役割(WF) | agent | model | token(env) |
+|---|---|---|---|
+| PM / 進行 | `pm` | `opencode-go/kimi-k3` | OPENCODE_API_KEY |
+| 台本 script | `lumiere` | `opencode-go/grok-4.5`（essay は deepseek） | OPENCODE_API_KEY |
+| 読み上げ tts | `sakura-tts` | `sakura` | SAKURA_API_KEY |
+| 画像 image | `image-gen` | `cf-flux` | （wrangler OAuth） |
+| SE | `se-synth` | local | - |
+| 結合 mux | `lumiere` | local | - |
+| 統計 metrics | `metrics` | yt-dlp | - |
+| 文字起こし stt | `stt` | `deepgram` | DEEPGRAM_API_KEY |
+| 検証 qc | `qc` | `nvidia-nim` | NVIDIA_API_KEY |
+
+- 鍵は env 名だけ書く（値は repo に置かない）。
+- タイプ: `essay`（横 long）/ `short`（縦）/ `koma`（4 コマ）/ `explainer`（repo 解説）。
+
+## WF ↔ repo
+
+| 工程 | repo |
+|---|---|
+| neta | video-gen/themes, video-studio/projects |
+| script | talkscripts/<series>, video-gen/data/programs, video-pipeline/content |
+| tts | video-gen/data/audio, video-pipeline/tts, video-studio/out |
+| prompt | video-gen/themes, video-studio/out |
+| image | video-gen/data, video-studio/out |
+| se | video-studio/out, 4koma-video |
+| mux | video-gen/data/motion, video-pipeline/videos, video-studio/out, MEGA |
+| deploy | YouTube, MEGA |
+| metrics | YouTube, kanalvideo-analysis/data/db |
 
 ## 関連
 

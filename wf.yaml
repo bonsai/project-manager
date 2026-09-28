@@ -127,3 +127,15 @@ artifacts:
     - 'out/{slug}/*-final.mp4'
     - '*{slug}__*.mp4'
   # deploy / metrics は canonical の youtube_id / stats を見る（ファイルではない）
+
+# 工程 ↔ repo の対応（一覧。成果物がどの repo にあるか）
+repos:
+  neta:    [video-gen/themes, video-studio/projects]
+  script:  ['talkscripts/<series>', video-gen/data/programs, video-pipeline/content]
+  tts:     [video-gen/data/audio, video-pipeline/tts, video-studio/out]
+  prompt:  [video-gen/themes, video-studio/out]
+  image:   [video-gen/data, video-studio/out]
+  se:      [video-studio/out, 4koma-video]
+  mux:     [video-gen/data/motion, video-pipeline/videos, video-studio/out, MEGA]
+  deploy:  [YouTube, MEGA]
+  metrics: [YouTube, kanalvideo-analysis/data/db]

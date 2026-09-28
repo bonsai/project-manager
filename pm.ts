@@ -123,6 +123,20 @@ const [sub, arg] = process.argv.slice(2);
 
 if (sub === "plan") {
   const videos = loadVideos();
+  const projects = videos.map((v) => {
+    const rows = check(v);
+    return { no: v.no, slug: v.slug, title: v.title ?? "", ok: rows.filter((r) => r.ok).length, cells: rows.length, rows };
+  });
+
+  // 機械可読（orchestrator が読む）。pm plan json / --json
+  if (arg === "json" || process.argv.includes("--json")) {
+    const remaining: Record<string, number> = {};
+    for (const id of doc.flow) remaining[id] = 0;
+    for (const p of projects) for (const r of p.rows) if (!r.ok) remaining[r.id] = (remaining[r.id] ?? 0) + 1;
+    console.log(JSON.stringify({ tracker: doc.tracker ?? "", flow: doc.flow, who: Object.fromEntries(doc.flow.map((id) => [id, who(id)])), remaining, projects }, null, 2));
+    process.exit(0);
+  }
+
   const tally = new Map<string, number>();
   let okAll = 0;
   let cellsAll = 0;
