@@ -7,17 +7,29 @@ account: `mNTmcCAC3UzON9i6lxCta9ZwLncPcaCgEdUFxSoRtSg`
 計測 2026-09-29。`/v1/models` は**鍵なしで 200**（公開カタログ）なので、鍵の検証にはならない。
 推論で確かめること。404 は「カタログにはあるが、このアカウントには提供なし」。
 
-## OK（このアカウントで動く）
+**無料判定 = このアカウントで 200 が返る**こと（`type` や `/v1/models` に無料印は無い）。
+結果は `~/.skills/project-manager/nvidia-ok.json` に保存される（pi `/nv` と opencode `nvidia_models` が共有）。
+
+## 無料で使える（14 本・2026-09-29 実測）
 
 | model | 用途 |
 |---|---|
+| `deepseek-ai/deepseek-v4.1-flash` | deepseek が nvidia 経由で無料（有料回避） |
+| `google/diffusiongemma-26b-a4b-it` | 汎用 |
 | `meta/llama-3.2-11b-vision-instruct` | vision（速い。QC の既定） |
-| `meta/muse-glimmer-30b` | 汎用 |
+| `meta/muse-glimmer-30b` | multimodal reasoning |
 | `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning` | reasoning |
-| `nvidia/nemotron-3-ultra-550b-a55b` | 大型 |
+| `nvidia/nemotron-3-ultra-550b-a55b` | 大型・agent |
+| `nvidia/nemotron-3.5-lightning-30b-a3b` | 速い agentic |
+| `nvidia/nemotron-3.5-content-safety` | safety |
+| `nvidia/nemotron-parse-2.0` | 画像から文字/表 |
+| `nvidia/ising-calibration-1.5-31b` | VLM |
+| `nvidia/llama-3.1-nemotron-safety-guard-8b-v3` | safety |
+| `nvidia/riva-translate-4b-instruct-v1.1` / `-v2` | 翻訳 |
 | `openai/gpt-oss-20b` | 汎用 |
-| `z-ai/glm-5.3-flash` | 速い |
-| `deepseek-ai/deepseek-v4.1-flash` | **deepseek が nvidia 経由で無料**（有料回避に使える） |
+
+**注意**: このリストは変わる（transient な 503/timeout で抜けることがある）。`/nv ok`（pi）か
+`nvidia_models probe:true`（opencode）で再実測して更新する。
 
 ## 不安定 / 遅い（今は避ける）
 
