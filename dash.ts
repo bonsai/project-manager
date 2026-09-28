@@ -14,6 +14,7 @@ const esc = (s: unknown) =>
   String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 
 const doc = loadWfDoc(join(HERE, "wf.yaml"));
+const human = (doc as { human?: { view?: string; review?: string; sinks?: string[]; outside?: boolean } }).human ?? {};
 const cast = Bun.YAML.parse(readFileSync(join(HERE, "casting.yaml"), "utf8")) as {
   policy?: { prefer?: string[]; paid_last?: string[] };
   defaults?: Record<string, { agent?: string; model?: string; engine?: string; token?: string }>;
@@ -112,6 +113,11 @@ code{background:#21262d;border-radius:4px;padding:0 4px}small{color:var(--mut)}
 <table><tr><th>no</th><th>slug</th>${head}<th>到達</th><th>次の一手</th></tr>${matrix}</table>
 <h2>工程別の未達（次に片付ける順）</h2>
 <table><tr><th>工程</th><th>名前</th><th>担当</th><th>未達</th></tr>${missing}</table>
+<h2>人間が触るところ（視聴とダメ出しだけ・企画〜投稿は agent）</h2>
+<table><tr><th>関所</th><th>やり方</th><th>落とし先</th></tr>
+<tr><td>視聴</td><td>${esc(human.view ?? "-")}</td><td>-</td></tr>
+<tr><td>ダメ出し</td><td>${esc(human.review ?? "-")}</td><td><small>${esc((human.sinks ?? []).join(", ") || "-")}</small></td></tr>
+</table>
 <h2>タイプ別</h2>
 <table><tr><th>type</th><th>aspect</th><th>使う工程</th><th>上書き</th></tr>${typeRows}</table>
 <h2>キャスト（誰に・どのモデルで・どの鍵で）</h2>

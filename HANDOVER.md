@@ -26,6 +26,8 @@
 
 ## 方針（決定事項）
 
+- **人間は視聴（view）とダメ出し（review）だけ**。企画・制作・投稿（neta〜mux, deploy）は agent が回す。
+  型は `wf.yaml` の `human:`（sinks = reviews.jsonl / issue）と `casting.yaml` の `roles.human|agent`。
 - 台帳の書き手は videoman（`src/config.ts` の既定が `~/.skills/project-manager/data/videos.jsonl`、`KANAL_JSONL`/`VIDEOMAN_JSONL` で差し替え可）。PM は読むだけ。
 - 工程の有無は台帳ではなく成果物ファイル（`wf.yaml` の roots × artifacts を glob）。例外は `deploy`=`youtube_id` / `metrics`=`stats.views`。
 - 派生（SQLite `pipeline.db` / HTML / BQ）は `kanalvideo-analysis` 側に残す。
@@ -40,11 +42,13 @@
 
 ## 次の一手
 
+- 人間の関所に合わせて、neta〜mux を agent が回して 1 本 9/9 にする（最短は `typesafe-jev` の 5/9）。
 - 9/9 のプロジェクトが 0 本（最短は `typesafe-jev` の 5/9）。
 - オントロジの残: `role:prompt` にキャストが無い（`casting.yaml` の defaults に prompt が欠けている）。legacy kind `long`（types に無い）の扱いを決める。
 
 ## ISSUE_LOG
 
+- 2026-09-29 役割分担を型に反映: neta/deploy を agent へ移し、人間は視聴（view）とダメ出し（review）のみに。`wf.yaml` の `human:`、`casting.yaml` の `roles`、オントロジの `gate` ノードとクエリ `human` / `human-vs-agent`、dash の「人間が触るところ」を追加。
 - 2026-09-29 `openapi.yaml` を追加し、`~/.local/bin/pm` / `video-ontology` を張る `scripts/install.sh` を追加。壊れていた `~/.skills/cli/registry/videoman.yaml` も貼り直した。
 - 2026-09-29 `pm dashboards` / `pm index` を追加（`videoman dashboards` と同じ流儀: 生成 → 開く）。`dash.ts` が進捗マトリクスを HTML 化。Chrome での実オープンを確認。
 - 2026-09-29 動画ドメインのオントロジを追加（`ontology.ts` + `data/video-ontology.sql` + `data/queries.sql`）。工程判定を `lib/stages.ts` に抽出し pm.ts と共有。

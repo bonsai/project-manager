@@ -61,11 +61,28 @@ bun ~/.skills/project-manager/ontology.ts q "SELECT * FROM v_next LIMIT 5"
 - 判定アルゴリズムは `lib/stages.ts` の 1 箇所（`pm.ts` もここを使う）
 - 代表クエリは `data/queries.sql`（スキーマは `data/video-ontology.sql`）
 
+## 役割分担（人間は視聴とダメ出しだけ）
+
+```
+人間   view（videoman serve で見る） / review（ダメ出し → reviews.jsonl、必要なら issue）
+agent  neta → script → tts → prompt → image → se → mux → deploy → metrics
+```
+
+`wf.yaml` の `who` は全工程 `agent`、`human:` セクションが人間の関所（視聴・ダメ出し）を型として持つ。
+`casting.yaml` の `roles.human / roles.agent` も同じ分担。企画（neta）と投稿（deploy）も agent が回し、
+人間は**事後に見てダメ出しする**（差し戻しは reviews.jsonl / issue）。
+
+```bash
+video-ontology q human           # 人間の関所と落とし先
+video-ontology q human-vs-agent  # 工程の担当（現在は 9/9 が agent）
+```
+
 ## 責務の境界
 
 | やること | やらないこと（持ち主） |
 |---|---|
 | 9 要素の検査・次の一手、台帳と定義の保持 | 台帳の更新（videoman） |
+| 役割分担の型（人間=視聴/ダメ出し、agent=企画〜投稿） | ダメ出しの受付（videoman reviewer） |
 | 工程ボード（横断/縦断） | 成果物の生成（各 repo） |
 | 抜け・GATE の指摘 | 投稿（yt-upload）/ 統計取得（yt-dlp） |
 

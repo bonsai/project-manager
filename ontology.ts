@@ -74,7 +74,8 @@ function build(): void {
   const KINDS_OF: Record<string, string> = {
     stage: "stage", repo: "repo", service: "service", store: "store", type: "type", role: "role",
     video: "video", vocab: "vocab", field: "field", artifact: "artifact", library: "library",
-    engine: "engine", key: "key", series: "series", status: "status",
+    engine: "engine", key: "key", series: "series", status: "status", gate: "gate", human: "human",
+    sink: "sink", issue: "issue",
   };
   // nodes への登録は必ずこれを通す（同じノードを複数工程から参照しても 1 行）
   const n = (id: string, kind: string, label: string, extra = "") =>
@@ -103,6 +104,16 @@ function build(): void {
     if (w.agent) e(`stage:${id}`, "cast_as", `role:${id}`);
     if (w.library) e(`stage:${id}`, "supplied_by", `library:${w.library}`);
   });
+
+  // 人間の関所（視聴 / ダメ出し）。工程ではなく、agent の出力に人間が触る点。
+  const human = doc.human ?? {};
+  for (const [gate, how] of [["view", human.view], ["review", human.review]] as const) {
+    if (!how) continue;
+    n(gate, "gate", gate === "view" ? "視聴（人間）" : "ダメ出し（人間）", how);
+    e(`gate:${gate}`, "owned_by", "human:reviewer", how);
+    for (const sink of human.sinks ?? []) e(`gate:${gate}`, "sinks_to", sink.includes(":") ? sink : `sink:${sink}`);
+  }
+  if (human.sinks?.length) n("reviewer", "human", "人間（視聴・ダメ出し）", human.sinks.join(", "));
 
   // 成果物（glob）と repo
   for (const [stage, patterns] of Object.entries(doc.artifacts ?? {})) {
@@ -217,6 +228,8 @@ const QUERIES: Record<string, string> = {
   "video-graph": "SELECT src, rel, dst FROM edges WHERE src LIKE 'video:%' ORDER BY src, rel",
   "artifacts-by-stage": "SELECT src AS stage, COUNT(*) n FROM edges WHERE rel='produces' GROUP BY src ORDER BY stage",
   "status-vocab": "SELECT value, meaning FROM vocab WHERE kind='status' ORDER BY ord",
+  human: "SELECT n.id AS gate, n.extra AS how, (SELECT GROUP_CONCAT(dst, ' ') FROM edges WHERE src=n.id AND rel='sinks_to') AS sinks FROM nodes n WHERE n.kind='gate' ORDER BY n.id",
+  "human-vs-agent": "SELECT who, COUNT(*) n, GROUP_CONCAT(id, ' ') stages FROM stages GROUP BY who",
 };
 
 function runQuery(nameOrSql: string): void {

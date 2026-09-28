@@ -46,6 +46,8 @@ export interface WfDoc {
   repos?: Record<string, string[]>;
   tracker?: string;
   library?: Record<string, { path: string; repo: string; seed?: string; done?: string; ledger?: string }>;
+  /** 人間が触るのは視聴とダメ出しだけ（企画・制作・投稿は agent） */
+  human?: { view?: string; review?: string; sinks?: string[]; outside?: boolean };
 }
 
 export interface StageRow {

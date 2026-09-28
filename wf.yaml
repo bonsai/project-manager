@@ -24,15 +24,23 @@ library:
     done: '<series>/#NN-*.md' # 完成 = 系列フォルダ
     actions: [talkscript-write, talkscript-audit, hall-eval]
 
+# 人間が触るのは 視聴（view）と ダメ出し（review）だけ。
+# 企画・制作・投稿（neta〜mux, deploy）は agent が回す。人間は事後にダメ出しで差し戻す。
+human:
+  view: 'videoman serve（http://127.0.0.1:8787）で見る'
+  review: 'ダメ出し（reviews.jsonl へ。必要なら issue を立てる）'
+  sinks: ['reviews.jsonl', 'issue:bonsai/kanalvideo-analysis']
+  outside: true # スマホから見てダメ出しできる
+
 # 担当: who=human|agent / agent=エージェント名 / outside=出先（スマホ）でできるか
 wfs:
   - id: neta
     name: ネタワード
     produces: '<slug>/neta.md'
     labels: [wf:neta]
-    gate: ワードが N 語ある
-    who: human
-    outside: true
+    gate: ワードが N 語ある（人間の関所は通らない。出た案は review でダメ出し可）
+    who: agent
+    agent: lumiere
   - id: script
     name: 台本
     library: script
@@ -82,9 +90,10 @@ wfs:
     name: デプロイ
     produces: youtube_id / MEGA
     labels: [wf:deploy]
-    gate: private→公開の手順
-    who: human
-    outside: true
+    gate: private→公開の手順（投稿も agent。人間は見てからダメ出しする）
+    who: agent
+    agent: lumiere
+    engine: yt-upload
   - id: metrics
     name: 統計
     produces: 'stats.json'

@@ -145,6 +145,7 @@ if (sub === "plan") {
     if (n) console.log(`  ${id.padEnd(8)} ${(nameOf.get(id) ?? "").padEnd(6)} ${String(n).padStart(2)} 件   ${who(id)}`);
   }
   console.log(`\ntracker: ${doc.tracker ?? "（未設定）"}  → 起票は orchestrator`);
+  console.log(`人間の関所: 視聴 / ダメ出し（${(doc.human?.sinks ?? ["reviews.jsonl"]).join(", ")}）。企画・制作・投稿は agent`);
 } else if (sub === "dashboards") {
   buildDashboards();
   const noOpen = process.argv.includes("--no-open");
@@ -188,4 +189,5 @@ if (sub === "plan") {
   }
   console.log("\n未完（工程別）:");
   for (const id of doc.flow) console.log(`  ${id.padEnd(8)} ${(nameOf.get(id) ?? "").padEnd(6)} ${tally.get(id) ?? 0}`);
+  console.log(`\n人間は見てダメ出しするだけ（企画・制作・投稿は agent）。ダメ出し先: ${(doc.human?.sinks ?? ["reviews.jsonl"]).join(", ")}`);
 }

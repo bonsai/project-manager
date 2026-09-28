@@ -20,9 +20,16 @@ policy:
   prefer: [sakura, nvidia, opencode] # free
   paid_last: [deepseek] # 有料。最後の要
 
+# 役割分担: **人間は視聴とダメ出しだけ**。企画・制作・投稿は agent が回す（wf.yaml の human も参照）。
+roles:
+  human: [view, review]                 # 見る・ダメ出しする（sink は reviews.jsonl）
+  agent: [neta, script, tts, prompt, image, se, mux, deploy, metrics, qc]
+
 # ── 既定（全タイプ共通） ──────────────────────────────
 defaults:
   pm:      { agent: pm,         model: opencode-go/kimi-k3,        token: OPENCODE_API_KEY }
+  neta:    { agent: lumiere,    model: sakura/preview/Kimi-K2.7-Code, token: SAKURA_API_KEY }
+  deploy:  { agent: lumiere,    model: opencode-go/kimi-k3,        engine: yt-upload, token: "" }
   script:  { agent: lumiere,    model: sakura/preview/Kimi-K2.7-Code, token: SAKURA_API_KEY }
   tts:     { agent: sakura-tts, model: sakura/preview/Kimi-K2.7-Code, engine: sakura-tts, token: SAKURA_API_KEY }
   image:   { agent: image-gen,  model: opencode-go/kimi-k3,        engine: cf-flux, token: "" } # wrangler OAuth
