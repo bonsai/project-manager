@@ -1,0 +1,107 @@
+# wf.yaml — 工程（WF）と成果物の在り処。
+#
+# 正: ~/.skills/video-studio/contract/index.yaml の flow。
+# 索引は issue（wf:<id> ラベル）、成果物はファイル。issue は持ち主の repo に置く。
+# ダッシュボードはこの 1 枚と issue/ファイルを読むだけ（domain は触らない）。
+version: 1
+updated: 2026-09-28
+
+# 制作〜追尾の順。前段（channel/target/ip/voice/imagen）は設定で固定。
+flow: [neta, script, tts, prompt, image, se, mux, deploy, metrics]
+
+# 供給元（library）。パスは直書きせずここで参照し、config で差し替えられる。
+library:
+  script:
+    path: ~/.skills/talkscripts
+    repo: bonsai/talkscripts
+    ledger: SERIES.md
+    seed: seed/ # 査読前の種（INDEX.md を除く）
+    review: pr # 査読中 = open PR
+    done: '<series>/#NN-*.md' # 完成 = 系列フォルダ
+    actions: [talkscript-write, talkscript-audit, hall-eval]
+
+wfs:
+  - id: neta
+    name: ネタワード
+    produces: '<slug>/neta.md'
+    labels: [wf:neta]
+    gate: ワードが N 語ある
+  - id: script
+    name: 台本
+    library: script
+    produces: '<series>/#NN-<slug>.md'
+    labels: [wf:script, series:<series>]
+    gate: 600-700字（90秒）/ RUBRIC 9軸
+    states: [seed, review, done]
+  - id: tts
+    name: 読み上げ
+    produces: 'talk.mp3'
+    labels: [wf:tts]
+    gate: mp3 が在る
+  - id: prompt
+    name: 画像プロンプト
+    produces: 'prompts.yaml'
+    labels: [wf:prompt]
+    gate: 枚数ぶん在る
+  - id: image
+    name: 画像
+    produces: 'images/*.png'
+    labels: [wf:image]
+    gate: 全枚数・文字を焼いていない
+  - id: se
+    name: SE
+    produces: 'se/*.wav'
+    labels: [wf:se]
+    gate: 素材を持たず合成する
+  - id: mux
+    name: 結合動画
+    produces: '*-final.mp4'
+    labels: [wf:mux]
+    gate: -final で終わる・尺
+  - id: deploy
+    name: デプロイ
+    produces: youtube_id / MEGA
+    labels: [wf:deploy]
+    gate: private→公開の手順
+  - id: metrics
+    name: 統計
+    produces: 'stats.json'
+    labels: [wf:metrics]
+    gate: 数値が在る
+
+# 成果物を探す場所（root 相対。{slug} 展開、glob 可）
+# PM はここを見て「どの工程まで来ているか」を判定する。
+roots:
+  video-gen: ~/.skills/video-gen
+  video-pipeline: ~/.skills/video-pipeline
+  video-studio: ~/.skills/video-studio
+  talkscripts: ~/.skills/talkscripts
+  mega: /mnt/c/Users/dance/Documents/MEGA
+
+artifacts:
+  neta:
+    - 'data/programs/{slug}/kikaku.md'
+    - 'projects/*{slug}*.md'
+  script:
+    - 'data/programs/{slug}/script.md'
+    - 'content/{slug}/speech*.md'
+    - '*/*{slug}*.md'
+  tts:
+    - 'data/audio/{slug}/*.mp3'
+    - 'tts/*{slug}*.mp3'
+    - 'out/{slug}/*talk*.mp3'
+  prompt:
+    - 'data/programs/{slug}/prompts.yaml'
+    - 'out/{slug}/*prompt*.yaml'
+  image:
+    - 'data/{slug}/*.png'
+    - 'out/{slug}/*image*.*'
+  se:
+    - 'out/{slug}/se/*.wav'
+    - 'out/{slug}/*se*.wav'
+  mux:
+    - 'data/{slug}/motion/*.mp4'
+    - 'videos/*{slug}*.mp4'
+    - 'out/{slug}/*-final.mp4'
+    - '*{slug}__*.mp4'
+  # deploy / metrics は canonical の youtube_id / stats を見る（ファイルではない）
