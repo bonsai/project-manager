@@ -30,8 +30,8 @@ const STATUS: Array<[string, string]> = [
   ["dropped", "中止"],
 ];
 const KINDS: Array<[string, string]> = [
-  ["long", "横長（エッセイ朗読など）"],
-  ["short", "縦 Short"],
+  ["long", "横長（90 秒超。エッセイ朗読など）"],
+  ["short", "縦 Short（90 秒以下のみ）"],
   ["koma", "四コマ（スクエア）"],
   ["explainer", "repo 解説"],
 ];
@@ -248,6 +248,7 @@ const QUERIES: Record<string, string> = {
   "video-graph": "SELECT src, rel, dst FROM edges WHERE src LIKE 'video:%' ORDER BY src, rel",
   "artifacts-by-stage": "SELECT src AS stage, COUNT(*) n FROM edges WHERE rel='produces' GROUP BY src ORDER BY stage",
   "status-vocab": "SELECT value, meaning FROM vocab WHERE kind='status' ORDER BY ord",
+  "kind-rule": "SELECT v.slug, v.kind, (SELECT ref FROM stage_state s WHERE s.slug=v.slug AND s.stage_id='mux') AS mux FROM videos v ORDER BY v.no",
   "gate-fail": "SELECT check_id, stage_id, COUNT(*) AS failing, (SELECT note FROM gate_checks g WHERE g.id = f.check_id) AS note FROM v_gate_fail f GROUP BY check_id ORDER BY failing DESC",
   "gate-by-stage": "SELECT stage_id, check_id, COUNT(*) failing FROM v_gate_fail GROUP BY check_id ORDER BY stage_id",
   manual: "SELECT id, stage_id, note FROM gate_checks WHERE manual = 1 ORDER BY stage_id",

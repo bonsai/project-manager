@@ -42,14 +42,18 @@ defaults:
 
 # ── 動画タイプ別 ──────────────────────────────────────
 types:
+  long: # 横長（90 秒超。台帳の kind=long はこれ。essay/explainer は制作の型）
+    aspect: '16:9' # 1920x1080（横）
+    use: [script, tts, mux, deploy, metrics]
   essay: # 知恵の館・横 long（エッセイ朗読）
     aspect: '16:9' # 1920x1080（横）
     seconds: 90 # 尺の期待値（gate の許容 ±35%）
     chars: [600, 700] # 台本の字数
     use: [script, tts, mux, deploy, metrics]
-  short: # 縦 Short（video-gen）
+  short: # 縦 Short（video-gen）。**90 秒以下のみ**（超えたら long 系へ）
     aspect: '9:16' # 1080x1920（縦）
     seconds: 60
+    max_seconds: 90 # kind=short の上限（gate: mux-kind-duration）
     chars: [400, 700]
     use: [script, tts, image, mux, deploy, metrics]
   koma: # 哲学四コマ（4koma-video）

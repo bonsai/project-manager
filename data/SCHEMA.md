@@ -87,6 +87,7 @@ idea → script → audio → video → ready → uploaded
 
 | フィールド | 意味 |
 |---|---|
+| `kind` | 動画タイプ。**`short` は 90 秒以下のみ**（超えたら `long` 系）。型の定義は `casting.yaml` の `types` |
 | `target_seconds` | 計画尺（秒）。gate の尺チェックの期待値。無ければ動画タイプ（`casting.yaml` の `types.<kind>.seconds`）を使う |
 
 ## 全動画リスト + これから作るリスト

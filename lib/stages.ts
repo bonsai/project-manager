@@ -30,7 +30,7 @@ export interface WfCheck {
   /** 対象の工程（その工程の成果物を検査する） */
   stage: string;
   id: string;
-  kind: "presence" | "count" | "words" | "chars" | "contains" | "duration" | "suffix" | "aspect" | "number" | "youtube" | "manual";
+  kind: "presence" | "count" | "words" | "chars" | "contains" | "duration" | "suffix" | "aspect" | "number" | "youtube" | "kind_duration" | "manual";
   match?: string;
   min?: number;
   max?: number;
@@ -40,6 +40,8 @@ export interface WfCheck {
   from_type?: boolean;
   /** 尺の許容幅（既定 0.35 = ±35%） */
   tolerance?: number;
+  /** kind=short を許す上限秒（既定 90）。超えたら短尺扱いにしない */
+  max_short_seconds?: number;
 }
 
 export interface Wf {

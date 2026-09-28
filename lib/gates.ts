@@ -148,6 +148,16 @@ export function runChecks(
         else fail(bad.join(" / "));
         break;
       }
+      case "kind_duration": {
+        const d = probeDuration(seen(matched)[0]!);
+        const max = c.max_short_seconds ?? 90;
+        const isShort = String(v.kind ?? "") === "short";
+        if (d == null) fail("尺が読めない");
+        else if (isShort && d > max) fail(`${d.toFixed(1)}s は ${max}s 超 → short 不可（長尺の kind へ）`);
+        else if (!isShort && d <= max) fail(`${d.toFixed(1)}s は ${max}s 以下 → short にすべき`);
+        else pass(`${d.toFixed(1)}s / kind ${v.kind}`);
+        break;
+      }
       case "aspect": {
         const want = c.from_type ? typeSpec.aspect : undefined;
         const got: string[] = [];

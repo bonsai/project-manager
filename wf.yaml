@@ -233,6 +233,18 @@ checks:
     match: "*.mp4"
     from_type: true
     note: 尺
+  - id: mux-kind-duration
+    stage: mux
+    kind: kind_duration
+    match: "*.mp4"
+    max_short_seconds: 90
+    note: 90秒以下のみ short（超えたら long 系へ）
+  - id: mux-aspect
+    stage: mux
+    kind: aspect
+    match: "*.mp4"
+    from_type: true
+    note: タイプの aspect（short = 9:16）
   - id: deploy-id
     stage: deploy
     kind: youtube
