@@ -42,6 +42,8 @@ bun ~/.skills/project-manager/pm.ts wf         # WF 一覧
 ## ファイル
 
 - `pm.ts` — 検査本体（bun）
+- `diagram.ts` — `wf.yaml`/`casting.yaml` から `pipeline.html`（Mermaid の図）を生成
+- `pipeline.html` — パイプラインの図（工程・orchestration・キャスト・タイプ・WF↔repo）
 - `wf.yaml` — 9 要素の定義・roots・成果物パターン・WF↔repo
 - `casting.yaml` — 誰に・どのモデルで・どの鍵で（動画タイプ別のキャスト表）
 
