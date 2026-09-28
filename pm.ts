@@ -8,14 +8,14 @@
 //   pm <slug>       1 本の詳細 + 次の一手
 //   pm wf [id]      工程ボード（script = 台本部: seed/review/done）
 //
-// 定義は同じディレクトリの wf.yaml。台帳は env VIDEOMAN_JSONL か既定パス。
+// 定義は同じディレクトリの wf.yaml、台帳は data/videos.jsonl（env VIDEOMAN_JSONL で差し替え）。
 import { existsSync, readdirSync, statSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
 const HERE = import.meta.dir;
 const HOME = homedir();
-const canonical = process.env.VIDEOMAN_JSONL ?? join(HOME, ".skills/kanalvideo-analysis/pipeline/videos.jsonl");
+const canonical = process.env.VIDEOMAN_JSONL ?? join(HERE, "data/videos.jsonl");
 
 const expandHome = (p: string) => (p.startsWith("~") ? join(HOME, p.slice(1)) : p);
 const short = (p: string) => p.replace(HOME, "~");

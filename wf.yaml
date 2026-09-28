@@ -2,6 +2,7 @@
 #
 # 正: ~/.skills/video-studio/contract/index.yaml の flow。
 # 索引は issue（wf:<id> ラベル）、成果物はファイル。issue は持ち主の repo に置く。
+# 台帳（canonical）は data/videos.jsonl。書き手は videoman、スキーマは data/SCHEMA.md。
 # PM/オーケストレーターはこの 1 枚と issue/ファイルを読むだけ（domain は触らない）。
 version: 1
 updated: 2026-09-28

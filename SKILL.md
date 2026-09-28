@@ -19,7 +19,8 @@ neta(ネタワード) → script(台本) → tts(読み上げ) → prompt(画像
 ```
 
 - 定義は `wf.yaml`（正: `~/.skills/video-studio/contract/index.yaml` の flow）。
-- 台帳は videoman の canonical（`~/.skills/kanalvideo-analysis/pipeline/videos.jsonl`。`VIDEOMAN_JSONL` で差し替え）。
+- 台帳は `data/videos.jsonl`（videoman の canonical。`VIDEOMAN_JSONL` で差し替え）。スキーマは `data/SCHEMA.md`。
+  videoman は `src/config.ts` の既定でこのパスを見る（旧 `kanalvideo-analysis/pipeline/` から 2026-09-29 に移設）。
 - 成果物は `wf.yaml` の `roots` × `artifacts` を glob して見る（ファイルの有無が状態）。
 
 ## 使い方
@@ -35,7 +36,7 @@ bun ~/.skills/project-manager/pm.ts wf         # WF 一覧
 
 | やること | やらないこと（持ち主） |
 |---|---|
-| 9 要素の検査・次の一手 | 台帳の更新（videoman） |
+| 9 要素の検査・次の一手、台帳と定義の保持 | 台帳の更新（videoman） |
 | 工程ボード（横断/縦断） | 成果物の生成（各 repo） |
 | 抜け・GATE の指摘 | 投稿（yt-upload）/ 統計取得（yt-dlp） |
 
@@ -47,6 +48,8 @@ bun ~/.skills/project-manager/pm.ts wf         # WF 一覧
 - `pipeline.html` / `script.html` — 生成物
 - `pipeline.html` — パイプラインの図（工程・orchestration・キャスト・タイプ・WF↔repo）
 - `wf.yaml` — 9 要素の定義・roots・成果物パターン・WF↔repo
+- `data/videos.jsonl` — 台帳（canonical）。`data/SCHEMA.md` — そのスキーマ
+- `state/` — 生成キャッシュ（nvidia-ok.json 等）
 - `casting.yaml` — 誰に・どのモデルで・どの鍵で（動画タイプ別のキャスト表）
 
 ## キャスト表（誰に・どのモデルで・どの鍵で）
