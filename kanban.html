@@ -1,0 +1,183 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PM かんばん — 台帳の段階</title><link rel="icon" href="data:,">
+<style>
+:root{--bg:#0d1117;--panel:#161b22;--fg:#e6edf3;--mut:#8b949e;--bd:#30363d;--acc:#58a6ff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace}
+.wrap{max-width:1400px;margin:0 auto;padding:20px 14px 60px}
+h1{font-size:18px;margin:0 0 4px}h2{font-size:13px;margin:20px 0 8px;border-top:1px solid var(--bd);padding-top:12px}
+.sub{color:var(--mut);font-size:12px;margin-bottom:12px}
+code{background:#21262d;border-radius:4px;padding:0 4px}small{color:var(--mut)}
+table{width:100%;border-collapse:collapse;margin:6px 0}
+td,th{padding:6px 8px;border-bottom:1px solid var(--bd);text-align:left;font-size:12px}
+th{color:var(--mut);font-weight:400;font-size:11px}
+a{color:var(--acc)}
+
+.kanban{display:grid;grid-template-columns:repeat(4,minmax(220px,1fr));gap:12px;align-items:start}
+@media(max-width:1100px){.kanban{grid-template-columns:repeat(2,minmax(200px,1fr))}}
+.kcol{background:var(--panel);border:1px solid var(--bd);border-radius:12px;padding:8px;min-height:80px}
+.kcol h3{font-size:12px;margin:2px 0 8px;color:var(--fg)}
+.kcol h3 small{color:var(--mut)}
+.kcard{border:1px solid var(--bd);border-radius:9px;overflow:hidden;margin-bottom:8px;background:#0d1117;display:flex;gap:8px}
+.kcard img{width:64px;height:64px;object-fit:cover;flex:0 0 64px}
+.kph{width:64px;height:64px;flex:0 0 64px;display:flex;align-items:center;justify-content:center;color:var(--mut);font-size:10px;background:#161b22}
+.kbody{padding:6px 8px 6px 0;min-width:0}
+.ktitle{color:var(--mut);font-size:11px;margin:2px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kmeta{color:var(--mut);font-size:10px}
+.knext{font-size:11px;color:var(--acc)}
+.empty{color:var(--mut);font-size:11px;padding:4px}
+
+</style></head><body><div class="wrap">
+<h1>PM かんばん — 台帳の段階</h1>
+<div class="sub">台帳 ~/.skills/project-manager/data/videos.jsonl / 生成 2026-09-28 18:36 / 本 18</div>
+<div class="kanban"><div class="kcol"><h3>idea（候補） <small>4</small></h3><div class="kcard">
+  <div class="kph">no image</div>
+  <div class="kbody">
+    <b>#16</b> <code>line-miniapp-youtube-juku</code>
+    <div class="ktitle">LINE ミニアプリ × YouTube 塾</div>
+    <div class="kmeta">long · 0/9 · gate 不合 14</div>
+    <div class="knext">次: neta</div>
+  </div>
+</div><div class="kcard">
+  <div class="kph">no image</div>
+  <div class="kbody">
+    <b>#19</b> <code>fungus</code>
+    <div class="ktitle">菌類は考えるか — 菌糸体・ネットワーク・知性</div>
+    <div class="kmeta">short · 0/9 · gate 不合 14</div>
+    <div class="knext">次: neta</div>
+  </div>
+</div><div class="kcard">
+  <div class="kph">no image</div>
+  <div class="kbody">
+    <b>#20</b> <code>C:\Users\dance\Documents\MEGA\13-fungus-yamagata__ready__20260929.mp4</code>
+    <div class="ktitle">C:\Users\dance\Documents\MEGA\13-fungus-yamagata__ready__20260929.mp4</div>
+    <div class="kmeta">short · 0/9 · gate 不合 14</div>
+    <div class="knext">次: neta</div>
+  </div>
+</div><div class="kcard">
+  <div class="kph">no image</div>
+  <div class="kbody">
+    <b>#21</b> <code>”きのこ”　C:\Users\dance\Documents\MEGA\13-fungus-yamagata__ready__20260929.mp4</code>
+    <div class="ktitle">”きのこ”　C:\Users\dance\Documents\MEGA\13-fungus-yamagata__ready__20260929.mp4</div>
+    <div class="kmeta">short · 0/9 · gate 不合 14</div>
+    <div class="knext">次: neta</div>
+  </div>
+</div></div><div class="kcol"><h3>script（台本） <small>4</small></h3><div class="kcard">
+  <div class="kph">no image</div>
+  <div class="kbody">
+    <b>#14</b> <code>ai-dev-5stages</code>
+    <div class="ktitle">AI 開発の5段階</div>
+    <div class="kmeta">long · 0/9 · gate 不合 14</div>
+    <div class="knext">次: neta</div>
+  </div>
+</div><div class="kcard">
+  <div class="kph">no image</div>
+  <div class="kbody">
+    <b>#15</b> <code>star1-30s</code>
+    <div class="ktitle">star1 30秒</div>
+    <div class="kmeta">short · 0/9 · gate 不合 14</div>
+    <div class="knext">次: neta</div>
+  </div>
+</div><div class="kcard">
+  <div class="kph">no image</div>
+  <div class="kbody">
+    <b>#22</b> <code>kinoko</code>
+    <div class="ktitle">きのこ — 私という単位を疑う</div>
+    <div class="kmeta">short · 1/9 · gate 不合 14</div>
+    <div class="knext">次: neta</div>
+  </div>
+</div><div class="kcard">
+  <div class="kph">no image</div>
+  <div class="kbody">
+    <b>#23</b> <code>hyakki-yagyo</code>
+    <div class="ktitle">百鬼夜行 — 行列に何を映しているか</div>
+    <div class="kmeta">short · 1/9 · gate 不合 14</div>
+    <div class="knext">次: neta</div>
+  </div>
+</div></div><div class="kcol"><h3>audio（音声） <small>1</small></h3><div class="kcard">
+  <div class="kph">no image</div>
+  <div class="kbody">
+    <b>#13</b> <code>jev-semgrep-essay</code>
+    <div class="ktitle">Jev / semgrep エッセイ朗読</div>
+    <div class="kmeta">long · 1/9 · gate 不合 13</div>
+    <div class="knext">次: neta</div>
+  </div>
+</div></div><div class="kcol"><h3>video（動画） <small>2</small></h3><div class="kcard">
+  <div class="kph">no image</div>
+  <div class="kbody">
+    <b>#09</b> <code>recap-journey</code>
+    <div class="ktitle">Recap Journey（旅の振り返り）</div>
+    <div class="kmeta">short · 1/9 · gate 不合 12</div>
+    <div class="knext">次: neta</div>
+  </div>
+</div><div class="kcard">
+  <div class="kph">no image</div>
+  <div class="kbody">
+    <b>#11</b> <code>uehaj-jev-semgrep</code>
+    <div class="ktitle">uehaj / Jev / semgrep（90秒スピーチ）</div>
+    <div class="kmeta">long · 3/9 · gate 不合 8</div>
+    <div class="knext">次: neta</div>
+  </div>
+</div></div><div class="kcol"><h3>ready（投稿可） <small>0</small></h3><div class=empty>-</div></div><div class="kcol"><h3>uploaded（公開） <small>7</small></h3><div class="kcard">
+  <div class="kph">no image</div>
+  <div class="kbody">
+    <b>#01</b> <code>entropy-shannon-llm-jev</code>
+    <div class="ktitle">エントロピーを閉じる — シャノン、LLM、Jev</div>
+    <div class="kmeta">long · 4/9 · gate 不合 8 · YT</div>
+    <div class="knext">次: neta</div>
+  </div>
+</div><div class="kcard">
+  <div class="kph">no image</div>
+  <div class="kbody">
+    <b>#02</b> <code>borges-library-llm-reading</code>
+    <div class="ktitle">ぜんぶは読めない。では、何を読むか — ボルヘス、図書館、LLM</div>
+    <div class="kmeta">long · 4/9 · gate 不合 8 · YT</div>
+    <div class="knext">次: neta</div>
+  </div>
+</div><div class="kcard">
+  <div class="kph">no image</div>
+  <div class="kbody">
+    <b>#03</b> <code>null-nagarjuna-ochiai</code>
+    <div class="ktitle">ヌルの庭で待つ — 仏教と落合陽一と量子の徒然</div>
+    <div class="kmeta">long · 4/9 · gate 不合 8 · YT</div>
+    <div class="knext">次: neta</div>
+  </div>
+</div><div class="kcard">
+  <img src="dash-thumbs/typesafe-jev.png" alt="">
+  <div class="kbody">
+    <b>#10</b> <code>typesafe-jev</code>
+    <div class="ktitle">typesafe-jev（90秒スピーチ）</div>
+    <div class="kmeta">short · 8/9 · gate 不合 1 · YT</div>
+    <div class="knext">次: metrics</div>
+  </div>
+</div><div class="kcard">
+  <img src="dash-thumbs/douga-hensyu-juku-ep01-mux.jpg" alt="">
+  <div class="kbody">
+    <b>#12</b> <code>douga-hensyu-juku-ep01-mux</code>
+    <div class="ktitle">あんこ生成塾 ep01 mux（30秒）</div>
+    <div class="kmeta">short · 8/9 · gate 不合 1 · YT</div>
+    <div class="knext">次: metrics</div>
+  </div>
+</div><div class="kcard">
+  <div class="kph">no image</div>
+  <div class="kbody">
+    <b>#17</b> <code>yt-YdnZICIRgO8</code>
+    <div class="ktitle">ワイン職人が Jev を例える #Shorts</div>
+    <div class="kmeta">short · 2/9 · gate 不合 12 · YT</div>
+    <div class="knext">次: neta</div>
+  </div>
+</div><div class="kcard">
+  <div class="kph">no image</div>
+  <div class="kbody">
+    <b>#18</b> <code>yt-PbENAC6-kao</code>
+    <div class="ktitle">請負屋が Jev を撃ち抜く #Shorts</div>
+    <div class="kmeta">short · 2/9 · gate 不合 12 · YT</div>
+    <div class="knext">次: neta</div>
+  </div>
+</div></div><div class="kcol"><h3>held（保留） <small>0</small></h3><div class=empty>-</div></div><div class="kcol"><h3>dropped（中止） <small>0</small></h3><div class=empty>-</div></div></div>
+<h2>一覧（表）</h2>
+<table><tr><th>no</th><th>slug</th><th>title</th><th>kind</th><th>status</th><th>9 要素</th><th>gate 不合</th><th>次の一手</th><th>file</th></tr>
+<tr><td>01</td><td><code>entropy-shannon-llm-jev</code></td><td>エントロピーを閉じる — シャノン、LLM、Jev</td><td>long</td><td><b>uploaded</b></td><td>4/9</td><td>8</td><td>neta</td><td><small>01-entropy-shannon-llm-jev__uploaded__20260923.mp4</small></td></tr><tr><td>02</td><td><code>borges-library-llm-reading</code></td><td>ぜんぶは読めない。では、何を読むか — ボルヘス、図書館、LLM</td><td>long</td><td><b>uploaded</b></td><td>4/9</td><td>8</td><td>neta</td><td><small>02-borges-library-llm-reading__uploaded__20260923.mp4</small></td></tr><tr><td>03</td><td><code>null-nagarjuna-ochiai</code></td><td>ヌルの庭で待つ — 仏教と落合陽一と量子の徒然</td><td>long</td><td><b>uploaded</b></td><td>4/9</td><td>8</td><td>neta</td><td><small>03-null-nagarjuna-ochiai__uploaded__20260923.mp4</small></td></tr><tr><td>09</td><td><code>recap-journey</code></td><td>Recap Journey（旅の振り返り）</td><td>short</td><td><b>video</b></td><td>1/9</td><td>12</td><td>neta</td><td><small>09-recap-journey__video__20260928.mp4</small></td></tr><tr><td>10</td><td><code>typesafe-jev</code></td><td>typesafe-jev（90秒スピーチ）</td><td>short</td><td><b>uploaded</b></td><td>8/9</td><td>1</td><td>metrics</td><td><small>10-typesafe-jev__ready__20260929.mp4</small></td></tr><tr><td>11</td><td><code>uehaj-jev-semgrep</code></td><td>uehaj / Jev / semgrep（90秒スピーチ）</td><td>long</td><td><b>video</b></td><td>3/9</td><td>8</td><td>neta</td><td><small>11-uehaj-jev-semgrep__video__20260927.mp4</small></td></tr><tr><td>12</td><td><code>douga-hensyu-juku-ep01-mux</code></td><td>あんこ生成塾 ep01 mux（30秒）</td><td>short</td><td><b>uploaded</b></td><td>8/9</td><td>1</td><td>metrics</td><td><small>12-douga-hensyu-juku-ep01-mux__ready__20260927.mp4</small></td></tr><tr><td>13</td><td><code>jev-semgrep-essay</code></td><td>Jev / semgrep エッセイ朗読</td><td>long</td><td><b>audio</b></td><td>1/9</td><td>13</td><td>neta</td><td><small>13-jev-semgrep-essay__audio__20260921.mp3</small></td></tr><tr><td>14</td><td><code>ai-dev-5stages</code></td><td>AI 開発の5段階</td><td>long</td><td><b>script</b></td><td>0/9</td><td>14</td><td>neta</td><td><small></small></td></tr><tr><td>15</td><td><code>star1-30s</code></td><td>star1 30秒</td><td>short</td><td><b>script</b></td><td>0/9</td><td>14</td><td>neta</td><td><small></small></td></tr><tr><td>16</td><td><code>line-miniapp-youtube-juku</code></td><td>LINE ミニアプリ × YouTube 塾</td><td>long</td><td><b>idea</b></td><td>0/9</td><td>14</td><td>neta</td><td><small></small></td></tr><tr><td>17</td><td><code>yt-YdnZICIRgO8</code></td><td>ワイン職人が Jev を例える #Shorts</td><td>short</td><td><b>uploaded</b></td><td>2/9</td><td>12</td><td>neta</td><td><small></small></td></tr><tr><td>18</td><td><code>yt-PbENAC6-kao</code></td><td>請負屋が Jev を撃ち抜く #Shorts</td><td>short</td><td><b>uploaded</b></td><td>2/9</td><td>12</td><td>neta</td><td><small></small></td></tr><tr><td>19</td><td><code>fungus</code></td><td>菌類は考えるか — 菌糸体・ネットワーク・知性</td><td>short</td><td><b>idea</b></td><td>0/9</td><td>14</td><td>neta</td><td><small></small></td></tr><tr><td>20</td><td><code>C:\Users\dance\Documents\MEGA\13-fungus-yamagata__ready__20260929.mp4</code></td><td>C:\Users\dance\Documents\MEGA\13-fungus-yamagata__ready__20260929.mp4</td><td>short</td><td><b>idea</b></td><td>0/9</td><td>14</td><td>neta</td><td><small></small></td></tr><tr><td>21</td><td><code>”きのこ”　C:\Users\dance\Documents\MEGA\13-fungus-yamagata__ready__20260929.mp4</code></td><td>”きのこ”　C:\Users\dance\Documents\MEGA\13-fungus-yamagata__ready__20260929.mp4</td><td>short</td><td><b>idea</b></td><td>0/9</td><td>14</td><td>neta</td><td><small></small></td></tr><tr><td>22</td><td><code>kinoko</code></td><td>きのこ — 私という単位を疑う</td><td>short</td><td><b>script</b></td><td>1/9</td><td>14</td><td>neta</td><td><small></small></td></tr><tr><td>23</td><td><code>hyakki-yagyo</code></td><td>百鬼夜行 — 行列に何を映しているか</td><td>short</td><td><b>script</b></td><td>1/9</td><td>14</td><td>neta</td><td><small></small></td></tr>
+</table>
+</div></body></html>

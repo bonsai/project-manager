@@ -7,7 +7,7 @@
 //   pm              全プロジェクトのマトリクス（9 要素）
 //   pm <slug>       1 本の詳細 + 次の一手
 //   pm wf [id]      工程ボード（script = 台本部: seed/review/done）
-//   pm dashboards   進捗 / 工程図 / 台本部 の HTML を作って開く（--no-open で生成だけ）
+//   pm dashboards   かんばん / 進捗 / 工程図 / 台本部 の HTML を作って開く（--no-open で生成だけ）
 //   pm index        3 枚を束ねた index.html を作って開く
 //
 // 定義は同じディレクトリの wf.yaml、台帳は data/videos.jsonl（env VIDEOMAN_JSONL で差し替え）。
@@ -173,6 +173,7 @@ function cmdCrawl(argv: string[]): void {
 
 // ── ダッシュボード（progress / pipeline / script）を生成してブラウザで開く
 const DASH_PAGES: Array<[string, string]> = [
+  ["kanban", "kanban.html"],
   ["progress", "progress.html"],
   ["pipeline", "pipeline.html"],
   ["script", "script.html"],

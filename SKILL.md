@@ -39,7 +39,7 @@ video-ontology q missing                       # 工程別の未達（オント�
 bun ~/.skills/project-manager/pm.ts <slug>     # 1 本の詳細 + 次の一手
 bun ~/.skills/project-manager/pm.ts wf script  # 台本部ボード（seed / review / done）
 bun ~/.skills/project-manager/pm.ts wf         # WF 一覧
-bun ~/.skills/project-manager/pm.ts dashboards  # 進捗/工程図/台本部 の HTML を作って開く（--no-open で生成のみ）
+pm dashboards                                  # かんばん/進捗/工程図/台本部 の HTML を作って開く（--no-open で生成のみ）
 bun ~/.skills/project-manager/pm.ts index       # 3 枚をタブで束ねた index.html を開く
 ```
 
@@ -137,6 +137,7 @@ video-ontology q human-vs-agent  # 工程の担当（現在は 9/9 が agent）
 - `dash.ts` — 進捗ダッシュボード（`progress.html`）と束ねた `index.html` を生成
 - `progress.html` / `pipeline.html` / `script.html` / `index.html` — 生成物（`pm dashboards` / `pm index` が作って開く）
 - `pipeline.html` — パイプラインの図（工程・orchestration・キャスト・タイプ・WF↔repo）
+- `kanban.html` — 台帳 status の列 × カード（サムネ + 9 要素の到達 + gate 不合 + 次の一手）
 - `progress.html` — 本 × 9 工程のマトリクス・到達率・工程別の未達・キャスト表
 - `wf.yaml` — 9 要素の定義・roots・成果物パターン・WF↔repo
 - `data/videos.jsonl` — 台帳（canonical）。`data/SCHEMA.md` — そのスキーマ

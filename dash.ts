@@ -154,6 +154,78 @@ const castRows = Object.entries(cast.defaults ?? {})
   .map(([id, c]) => `<tr><td>${esc(nameOf.get(id) ?? id)} <small>(${esc(id)})</small></td><td>${esc(c.agent ?? "-")}</td><td><code>${esc(c.model ?? "-")}</code></td><td>${esc(c.engine ?? "-")}</td><td><code>${esc(c.token || "-")}</code></td></tr>`)
   .join("");
 
+// ── かんばん（台帳 status の列 × カード）
+const KANBAN_COLS: Array<[string, string]> = [
+  ["idea", "idea（候補）"], ["script", "script（台本）"], ["audio", "audio（音声）"],
+  ["video", "video（動画）"], ["ready", "ready（投稿可）"], ["uploaded", "uploaded（公開）"],
+  ["held", "held（保留）"], ["dropped", "dropped（中止）"],
+];
+const colOf = (v: Video) => String(v.status ?? "idea");
+const kanban = KANBAN_COLS.map(([st, label]) => {
+  const list = rows.filter((r) => colOf(r.v) === st);
+  const items = list.map(({ v, st: stages, checks, reached }) => {
+    const bad = checks.filter((c) => !c.ok && !c.manual).length;
+    const next = stages.find((x) => !x.ok);
+    const thumb = thumbOf.get(v.slug);
+    return `<div class="kcard">
+  ${thumb ? `<img src="${esc(thumb)}" alt="">` : `<div class="kph">no image</div>`}
+  <div class="kbody">
+    <b>#${esc(v.no)}</b> <code>${esc(v.slug)}</code>
+    <div class="ktitle">${esc(v.title ?? "")}</div>
+    <div class="kmeta">${esc(v.kind ?? "?")} · ${reached}/9 · gate 不合 ${bad}${v.youtube_id ? " · YT" : ""}</div>
+    <div class="knext">${next ? `次: ${esc(next.id)}` : "全工程 ✅"}</div>
+  </div>
+</div>`;
+  }).join("");
+  return `<div class="kcol"><h3>${esc(label)} <small>${list.length}</small></h3>${items || `<div class=empty>-</div>`}</div>`;
+}).join("");
+
+const KANBAN_CSS = `
+.kanban{display:grid;grid-template-columns:repeat(4,minmax(220px,1fr));gap:12px;align-items:start}
+@media(max-width:1100px){.kanban{grid-template-columns:repeat(2,minmax(200px,1fr))}}
+.kcol{background:var(--panel);border:1px solid var(--bd);border-radius:12px;padding:8px;min-height:80px}
+.kcol h3{font-size:12px;margin:2px 0 8px;color:var(--fg)}
+.kcol h3 small{color:var(--mut)}
+.kcard{border:1px solid var(--bd);border-radius:9px;overflow:hidden;margin-bottom:8px;background:#0d1117;display:flex;gap:8px}
+.kcard img{width:64px;height:64px;object-fit:cover;flex:0 0 64px}
+.kph{width:64px;height:64px;flex:0 0 64px;display:flex;align-items:center;justify-content:center;color:var(--mut);font-size:10px;background:#161b22}
+.kbody{padding:6px 8px 6px 0;min-width:0}
+.ktitle{color:var(--mut);font-size:11px;margin:2px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kmeta{color:var(--mut);font-size:10px}
+.knext{font-size:11px;color:var(--acc)}
+.empty{color:var(--mut);font-size:11px;padding:4px}
+`;
+
+const kanbanHtml = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PM かんばん — 台帳の段階</title><link rel="icon" href="data:,">
+<style>
+:root{--bg:#0d1117;--panel:#161b22;--fg:#e6edf3;--mut:#8b949e;--bd:#30363d;--acc:#58a6ff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace}
+.wrap{max-width:1400px;margin:0 auto;padding:20px 14px 60px}
+h1{font-size:18px;margin:0 0 4px}h2{font-size:13px;margin:20px 0 8px;border-top:1px solid var(--bd);padding-top:12px}
+.sub{color:var(--mut);font-size:12px;margin-bottom:12px}
+code{background:#21262d;border-radius:4px;padding:0 4px}small{color:var(--mut)}
+table{width:100%;border-collapse:collapse;margin:6px 0}
+td,th{padding:6px 8px;border-bottom:1px solid var(--bd);text-align:left;font-size:12px}
+th{color:var(--mut);font-weight:400;font-size:11px}
+a{color:var(--acc)}
+${KANBAN_CSS}
+</style></head><body><div class="wrap">
+<h1>PM かんばん — 台帳の段階</h1>
+<div class="sub">台帳 ${esc(ledgerPath.replace(process.env.HOME ?? "", "~"))} / 生成 ${new Date().toISOString().slice(0, 16).replace("T", " ")} / 本 ${rows.length}</div>
+<div class="kanban">${kanban}</div>
+<h2>一覧（表）</h2>
+<table><tr><th>no</th><th>slug</th><th>title</th><th>kind</th><th>status</th><th>9 要素</th><th>gate 不合</th><th>次の一手</th><th>file</th></tr>
+${rows.map(({ v, st, checks, reached }) => {
+  const bad = checks.filter((c) => !c.ok && !c.manual).length;
+  const next = st.find((x) => !x.ok);
+  return `<tr><td>${esc(v.no)}</td><td><code>${esc(v.slug)}</code></td><td>${esc(v.title ?? "")}</td><td>${esc(v.kind ?? "")}</td><td><b>${esc(v.status ?? "")}</b></td><td>${reached}/9</td><td>${bad}</td><td>${next ? esc(next.id) : "-"}</td><td><small>${esc(v.file ?? "")}</small></td></tr>`;
+}).join("")}
+</table>
+</div></body></html>`;
+
 const progress = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>PM 進捗 — 9 要素</title><link rel="icon" href="data:,">
@@ -222,6 +294,7 @@ ul.gates li{color:var(--bad);font-size:11px;line-height:1.5}
 </div></body></html>`;
 
 const tabs: Array<[string, string]> = [
+  ["かんばん", "kanban.html"],
   ["進捗", "progress.html"],
   ["工程図", "pipeline.html"],
   ["台本部", "script.html"],
@@ -253,6 +326,10 @@ const what = process.argv[2] ?? "all";
 if (what === "all" || what === "progress") {
   writeFileSync(join(HERE, "progress.html"), progress);
   console.log(`wrote ${join(HERE, "progress.html")}（サムネ ${thumbOf.size} / 本 ${rows.length}）`);
+}
+if (what === "all" || what === "kanban") {
+  writeFileSync(join(HERE, "kanban.html"), kanbanHtml);
+  console.log(`wrote ${join(HERE, "kanban.html")}（列 ${KANBAN_COLS.length}）`);
 }
 if (what === "all" || what === "index") {
   writeFileSync(join(HERE, "index.html"), index);
