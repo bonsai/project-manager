@@ -9,9 +9,12 @@
 -- 汎用グラフ: nodes / edges（型をまたいだ関係を 1 本で辿る）
 -- 状態（毎回変わる）: stage_state + ビュー 3 つ
 
+DROP VIEW IF EXISTS v_gate_fail;
 DROP VIEW IF EXISTS v_progress;
 DROP VIEW IF EXISTS v_missing;
 DROP VIEW IF EXISTS v_next;
+DROP TABLE IF EXISTS stage_check;
+DROP TABLE IF EXISTS gate_checks;
 DROP TABLE IF EXISTS stage_state;
 DROP TABLE IF EXISTS edges;
 DROP TABLE IF EXISTS nodes;
@@ -122,6 +125,30 @@ CREATE TABLE stage_state (
     PRIMARY KEY (slug, stage_id)
 );
 
+-- gate（通過条件）。wf.yaml の checks が正。
+CREATE TABLE gate_checks (
+    id       TEXT PRIMARY KEY,       -- neta-body, script-chars, mux-final, deploy-id …
+    stage_id TEXT REFERENCES stages(id),
+    kind     TEXT NOT NULL,          -- presence | count | words | chars | contains | duration | suffix | aspect | number | youtube | manual
+    match    TEXT,                   -- 対象ファイルの絞り込み（基底名の glob）
+    min      REAL,
+    max_      REAL,
+    pattern  TEXT,
+    from_type INTEGER DEFAULT 0,     -- 期待値を types（aspect / chars / seconds）から取る
+    manual   INTEGER DEFAULT 0,      -- 人手で確認（自動判定しない）
+    note     TEXT
+);
+
+-- gate の状態（毎回の生成で作り直す）。検査は lib/gates.ts が唯一の実装。
+CREATE TABLE stage_check (
+    slug     TEXT NOT NULL REFERENCES videos(slug),
+    check_id TEXT NOT NULL REFERENCES gate_checks(id),
+    ok       INTEGER NOT NULL,
+    manual   INTEGER NOT NULL DEFAULT 0,
+    detail   TEXT,
+    PRIMARY KEY (slug, check_id)
+);
+
 -- 汎用グラフ: 型付きテーブルをまたいだ関係を 1 本で辿る。
 CREATE TABLE nodes (
     id    TEXT PRIMARY KEY,          -- 'stage:tts', 'repo:video-gen/data/audio', 'video:typesafe-jev' …
@@ -159,6 +186,13 @@ SELECT st.no, st.id, st.label, st.who, st.agent,
        SUM(CASE WHEN s.ok = 0 THEN 1 ELSE 0 END) AS missing
 FROM stages st JOIN stage_state s ON s.stage_id = st.id
 GROUP BY st.id ORDER BY missing DESC, st.no;
+
+-- gate の不合格（自動判定のみ。manual は別）
+CREATE VIEW v_gate_fail AS
+SELECT c.id AS check_id, c.stage_id, c.note, s.slug, s.detail
+FROM stage_check s JOIN gate_checks c ON c.id = s.check_id
+WHERE s.ok = 0 AND s.manual = 0
+ORDER BY c.stage_id, c.id;
 
 -- 次の一手（工程 → 担当 → 対象）
 CREATE VIEW v_next AS

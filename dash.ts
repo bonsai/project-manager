@@ -8,12 +8,15 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { loadWfDoc, stageState, type Video } from "./lib/stages";
+import { runChecks } from "./lib/gates";
 
 const HERE = import.meta.dir;
 const esc = (s: unknown) =>
   String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 
 const doc = loadWfDoc(join(HERE, "wf.yaml"));
+type TypeSpec = { aspect?: string; chars?: [number, number]; seconds?: number };
+
 const human = (doc as { human?: { view?: string; review?: string; sinks?: string[]; outside?: boolean } }).human ?? {};
 const cast = Bun.YAML.parse(readFileSync(join(HERE, "casting.yaml"), "utf8")) as {
   policy?: { prefer?: string[]; paid_last?: string[] };
@@ -44,6 +47,24 @@ const bar = (n: number, of: number, w = 12) => {
   const f = of ? Math.round((n / of) * w) : 0;
   return `<span class="bar">${"▰".repeat(f)}${"▱".repeat(w - f)}</span>`;
 };
+
+// gate（通過条件）の集約
+const gateTally = new Map<string, { stage: string; fail: number; pass: number; manual: number; note: string }>();
+for (const v of rows.map((r) => r.v)) {
+  for (const r of runChecks(v, doc, doc.checks ?? [], (cast.types ?? {}) as Record<string, TypeSpec>)) {
+    const t = gateTally.get(r.id) ?? { stage: r.stage, fail: 0, pass: 0, manual: 0, note: (doc.checks ?? []).find((c) => c.id === r.id)?.note ?? "" };
+    if (r.manual) t.manual++;
+    else if (r.ok) t.pass++;
+    else t.fail++;
+    gateTally.set(r.id, t);
+  }
+}
+const gateRows = [...gateTally.entries()]
+  .sort((a, b) => b[1].fail - a[1].fail || a[0].localeCompare(b[0]))
+  .map(([id, t]) => `<tr><td>${t.fail > 0 ? "✗" : t.manual > 0 ? "・" : "✅"}</td><td><code>${esc(id)}</code></td><td>${esc(t.stage)}</td>` +
+    `<td>${bar(t.pass, t.pass + t.fail)} <small>合格 ${t.pass} / 不合 ${t.fail}</small></td>` +
+    `<td><small>${t.manual ? `人手 ${t.manual}` : ""} ${esc(t.note)}</small></td></tr>`)
+  .join("");
 
 // ── マトリクス（本 × 工程）
 const matrix = rows
@@ -113,6 +134,8 @@ code{background:#21262d;border-radius:4px;padding:0 4px}small{color:var(--mut)}
 <table><tr><th>no</th><th>slug</th>${head}<th>到達</th><th>次の一手</th></tr>${matrix}</table>
 <h2>工程別の未達（次に片付ける順）</h2>
 <table><tr><th>工程</th><th>名前</th><th>担当</th><th>未達</th></tr>${missing}</table>
+<h2>gate（通過条件）— presence ではなく中身を見る</h2>
+<table><tr><th></th><th>check</th><th>工程</th><th>合格</th><th>定義・人手</th></tr>${gateRows}</table>
 <h2>人間が触るところ（視聴とダメ出しだけ・企画〜投稿は agent）</h2>
 <table><tr><th>関所</th><th>やり方</th><th>落とし先</th></tr>
 <tr><td>視聴</td><td>${esc(human.view ?? "-")}</td><td>-</td></tr>

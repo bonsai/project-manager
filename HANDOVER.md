@@ -32,6 +32,16 @@
 - 工程の有無は台帳ではなく成果物ファイル（`wf.yaml` の roots × artifacts を glob）。例外は `deploy`=`youtube_id` / `metrics`=`stats.views`。
 - 派生（SQLite `pipeline.db` / HTML / BQ）は `kanalvideo-analysis` 側に残す。
 
+## gate（通過条件）の検査（作成済み）
+
+`wf.yaml` の `checks`（15 種）を `lib/gates.ts` が実行する。presence だけでなく中身を見る。
+
+- `pm gate`（全本の不合成約）/ `pm gate <slug>` / `pm gate <slug> <stage>`、`pm <slug>` にも gate 節
+- 判定は 3 値: ✅ 合格 / ✗ 不合格 / ・ 人手で確認（`manual` は「通った」扱いにしない）
+- 尺の期待値は台帳の `target_seconds` → 型の `seconds`（±35%）。`data/SCHEMA.md` に追記し、判明分（typesafe-jev=90s, douga-hensyu=30s）を台帳へ入れた
+- 実測で見つかった実態: `script-thumb-aspect` は 13/13 未、`mux-final`（`-final.mp4` 命名）は 13/13 未、`tts-duration` は 12 本未（未制作）。現状の穴が定量的に見える
+- オントロジ: `gate_checks` / `stage_check` テーブル + ビュー `v_gate_fail`、クエリ `gate-fail` / `manual`
+
 ## オントロジ（作成済み）
 
 `bun ontology.ts build` で `data/video-ontology.db` を作る派生 DB。正は `wf.yaml` / `casting.yaml` / `data/videos.jsonl` / `data/SCHEMA.md`。
@@ -48,6 +58,7 @@
 
 ## ISSUE_LOG
 
+- 2026-09-29 gate を「在るか」から「中身」へ: `wf.yaml` に `checks` 15 種、`lib/gates.ts`（語数・字数・枚数・尺・aspect・命名・数値・manual）、`pm gate`、オントロジ `gate_checks`/`stage_check`/`v_gate_fail`、dash の gate 表。尺の期待値は台帳 `target_seconds` を追加して優先。
 - 2026-09-29 役割分担を型に反映: neta/deploy を agent へ移し、人間は視聴（view）とダメ出し（review）のみに。`wf.yaml` の `human:`、`casting.yaml` の `roles`、オントロジの `gate` ノードとクエリ `human` / `human-vs-agent`、dash の「人間が触るところ」を追加。
 - 2026-09-29 `openapi.yaml` を追加し、`~/.local/bin/pm` / `video-ontology` を張る `scripts/install.sh` を追加。壊れていた `~/.skills/cli/registry/videoman.yaml` も貼り直した。
 - 2026-09-29 `pm dashboards` / `pm index` を追加（`videoman dashboards` と同じ流儀: 生成 → 開く）。`dash.ts` が進捗マトリクスを HTML 化。Chrome での実オープンを確認。

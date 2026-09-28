@@ -12,6 +12,7 @@ import { Database } from "bun:sqlite";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { loadWfDoc, short, stageState, type Video } from "./lib/stages";
+import { runChecks, type TypeSpec } from "./lib/gates";
 
 const HERE = import.meta.dir;
 const DB_PATH = join(HERE, "data/video-ontology.db");
@@ -42,6 +43,7 @@ const FIELDS: Array<[string, string, number, string]> = [
   ["kind", "string", 1, "動画タイプ（types を参照）"],
   ["status", "string", 1, "段階（vocab.kind=status）"],
   ["stage_date", "string", 0, "現段階に到達した日"],
+  ["target_seconds", "number", 0, "計画尺（秒）。gate の尺チェックの期待値（型より優先）"],
   ["file", "string", 0, "現段階のメディア実体（idea は空）"],
   ["assets", "object", 0, "script / audio / thumb など"],
   ["youtube_id", "string", 0, "公開済みなら動画 ID（deploy の判定）"],
@@ -75,7 +77,7 @@ function build(): void {
     stage: "stage", repo: "repo", service: "service", store: "store", type: "type", role: "role",
     video: "video", vocab: "vocab", field: "field", artifact: "artifact", library: "library",
     engine: "engine", key: "key", series: "series", status: "status", gate: "gate", human: "human",
-    sink: "sink", issue: "issue",
+    sink: "sink", issue: "issue", check: "check",
   };
   // nodes への登録は必ずこれを通す（同じノードを複数工程から参照しても 1 行）
   const n = (id: string, kind: string, label: string, extra = "") =>
@@ -168,6 +170,18 @@ function build(): void {
     }
   }
 
+  // gate（通過条件）の定義と状態。検査は lib/gates.ts が唯一の実装。
+  for (const c of doc.checks ?? []) {
+    db.run(
+      "INSERT INTO gate_checks(id,stage_id,kind,match,min,max_,pattern,from_type,manual,note) VALUES(?,?,?,?,?,?,?,?,?,?)",
+      [c.id, c.stage, c.kind, c.match ?? null, c.min ?? null, c.max ?? null, c.pattern ?? null,
+       c.from_type ? 1 : 0, c.kind === "manual" ? 1 : 0, c.note ?? null],
+    );
+    n(c.id, "check", c.id, c.kind);
+    e(`stage:${c.stage}`, "gated_by", `check:${c.id}`, c.note ?? "");
+    if (c.kind === "manual") e(`check:${c.id}`, "needs_human", "human:reviewer");
+  }
+
   // 語彙とフィールド
   STATUS.forEach(([v, m], i) => db.run("INSERT INTO vocab(kind,value,meaning,ord) VALUES('status',?,?,?)", [v, m, i]));
   KINDS.forEach(([v, m], i) => db.run("INSERT INTO vocab(kind,value,meaning,ord) VALUES('kind',?,?,?)", [v, m, i]));
@@ -195,6 +209,10 @@ function build(): void {
     if (v.kind) e(`video:${v.slug}`, "of_type", `type:${v.kind}`);
     if (v.status) e(`video:${v.slug}`, "has_status", `vocab:status/${v.status}`);
     if (v.series) e(`video:${v.slug}`, "in_series", `series:${v.series}`);
+    for (const j of runChecks(v, doc, doc.checks ?? [], (cast.types ?? {}) as Record<string, TypeSpec>)) {
+      db.run("INSERT INTO stage_check(slug,check_id,ok,manual,detail) VALUES(?,?,?,?,?)", [v.slug, j.id, j.ok ? 1 : 0, j.manual ? 1 : 0, j.detail]);
+      if (!j.ok && !j.manual) e(`video:${v.slug}`, "fails", `check:${j.id}`, j.detail);
+    }
     for (const row of stageState(v, doc)) {
       db.run("INSERT INTO stage_state(slug,stage_id,ok,ref) VALUES(?,?,?,?)", [v.slug, row.id, row.ok ? 1 : 0, row.ref]);
       if (row.ok) e(`video:${v.slug}`, "reached", `stage:${row.id}`, short(row.ref));
@@ -205,8 +223,10 @@ function build(): void {
   const c = one<{ n: number }>("SELECT COUNT(*) n FROM nodes").n;
   const ce = one<{ n: number }>("SELECT COUNT(*) n FROM edges").n;
   const cs = one<{ n: number }>("SELECT COUNT(*) n FROM stage_state WHERE ok=1").n;
+  const cg = one<{ n: number }>("SELECT COUNT(*) n FROM stage_check WHERE ok=0 AND manual=0").n;
   console.log(`video-ontology: ${DB_PATH}`);
   console.log(`  nodes ${c} / edges ${ce} / 到達セル ${cs}/${videos.length * doc.flow.length} / 本 ${videos.length}`);
+  console.log(`  gate 不合格 ${cg}（manual は別）`);
   console.log(`  内訳: ${db.query("SELECT kind, COUNT(*) n FROM nodes GROUP BY kind ORDER BY n DESC").all().map((r: any) => `${r.kind} ${r.n}`).join(" / ")}`);
   db.close();
 }
@@ -228,6 +248,9 @@ const QUERIES: Record<string, string> = {
   "video-graph": "SELECT src, rel, dst FROM edges WHERE src LIKE 'video:%' ORDER BY src, rel",
   "artifacts-by-stage": "SELECT src AS stage, COUNT(*) n FROM edges WHERE rel='produces' GROUP BY src ORDER BY stage",
   "status-vocab": "SELECT value, meaning FROM vocab WHERE kind='status' ORDER BY ord",
+  "gate-fail": "SELECT check_id, stage_id, COUNT(*) AS failing, (SELECT note FROM gate_checks g WHERE g.id = f.check_id) AS note FROM v_gate_fail f GROUP BY check_id ORDER BY failing DESC",
+  "gate-by-stage": "SELECT stage_id, check_id, COUNT(*) failing FROM v_gate_fail GROUP BY check_id ORDER BY stage_id",
+  manual: "SELECT id, stage_id, note FROM gate_checks WHERE manual = 1 ORDER BY stage_id",
   human: "SELECT n.id AS gate, n.extra AS how, (SELECT GROUP_CONCAT(dst, ' ') FROM edges WHERE src=n.id AND rel='sinks_to') AS sinks FROM nodes n WHERE n.kind='gate' ORDER BY n.id",
   "human-vs-agent": "SELECT who, COUNT(*) n, GROUP_CONCAT(id, ' ') stages FROM stages GROUP BY who",
 };

@@ -65,6 +65,7 @@ idea → script → audio → video → ready → uploaded
   "kind": "short",
   "status": "video",
   "stage_date": "2026-09-28",
+  "target_seconds": 30,
   "file": "09-recap-journey__video__20260928.mp4",
   "assets": {"script": "recap-journey-01-script.txt", "audio": "recap-journey-02-narration.wav", "thumb": "recap-journey-03-visual.png"},
   "youtube_id": null,
@@ -81,6 +82,12 @@ idea → script → audio → video → ready → uploaded
   "notes": ""
 }
 ```
+
+### 任意フィールド
+
+| フィールド | 意味 |
+|---|---|
+| `target_seconds` | 計画尺（秒）。gate の尺チェックの期待値。無ければ動画タイプ（`casting.yaml` の `types.<kind>.seconds`）を使う |
 
 ## 全動画リスト + これから作るリスト
 

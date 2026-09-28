@@ -155,3 +155,89 @@ repos:
   mux:     [video-gen/data/motion, video-pipeline/videos, video-studio/out, MEGA]
   deploy:  [YouTube, MEGA]
   metrics: [YouTube, kanalvideo-analysis/data/db]
+
+# gate（通過条件）の機械可読な定義。presence（在るか）だけでなく内容も見る。
+#   kind: presence | count | words | chars | contains | duration | suffix | aspect | number | youtube | manual
+#   from_type: true → casting.yaml の types.<kind> の aspect / chars / seconds を期待値に使う
+#   manual は自動判定できない条件（「通った」扱いにしない。人間か agent が確かめる）
+checks:
+  - id: neta-body
+    stage: neta
+    kind: words
+    match: "*.md"
+    min: 20
+    note: ネタワードが N 語ある
+  - id: script-chars
+    stage: script
+    kind: chars
+    match: "*.md"
+    from_type: true
+    note: タイプの尺に合う字数
+  - id: script-thumb-aspect
+    stage: script
+    kind: contains
+    match: "*thumb*"
+    pattern: "aspect"
+    note: サムネプロンプトに aspect 指定（台本と同時に出す）
+  - id: script-rubric
+    stage: script
+    kind: manual
+    note: RUBRIC 9軸で査読（talkscript-audit / hall-eval）
+  - id: tts-duration
+    stage: tts
+    kind: duration
+    match: "*.mp3"
+    from_type: true
+    note: 尺が想定内
+  - id: prompt-count
+    stage: prompt
+    kind: count
+    match: "*.yaml"
+    min: 1
+    note: 枚数ぶん在る
+  - id: image-count
+    stage: image
+    kind: count
+    match: "*.png"
+    min: 1
+    note: 全枚数
+  - id: image-aspect
+    stage: image
+    kind: aspect
+    match: "*.png"
+    from_type: true
+    note: タイプの aspect
+  - id: image-no-text
+    stage: image
+    kind: manual
+    note: 文字を焼いていない
+  - id: se-files
+    stage: se
+    kind: count
+    match: "*.wav"
+    min: 1
+    note: SE が在る
+  - id: se-synth
+    stage: se
+    kind: manual
+    note: 素材を持たず合成する
+  - id: mux-final
+    stage: mux
+    kind: suffix
+    match: "*.mp4"
+    pattern: "-final.mp4"
+    note: "-final で終わる"
+  - id: mux-duration
+    stage: mux
+    kind: duration
+    match: "*.mp4"
+    from_type: true
+    note: 尺
+  - id: deploy-id
+    stage: deploy
+    kind: youtube
+    note: youtube_id（private→公開の手順）
+  - id: metrics-views
+    stage: metrics
+    kind: number
+    note: 数値が在る

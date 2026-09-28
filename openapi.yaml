@@ -49,6 +49,15 @@ paths:
       parameters:
         - {name: json, in: query, schema: {type: boolean}, x-cli: {flag: --json}}
       responses: {'200': {description: テキスト、または --json で機械可読 JSON}}
+  /gate:
+    get:
+      operationId: gate
+      summary: gate（通過条件）の検査。引数なし = 全本の不合成約 / slug = 1 本 / slug + stage = その工程だけ
+      tags: [audit]
+      parameters:
+        - {name: slug, in: query, schema: {type: string}, x-cli: {positional: 1}}
+        - {name: stage, in: query, schema: {type: string}, x-cli: {positional: 2}}
+      responses: {'200': {description: ✅ / ✗ / ・（人手）つきの一覧}}
   /wf:
     get:
       operationId: wf

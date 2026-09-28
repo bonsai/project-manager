@@ -17,11 +17,29 @@ export interface Video {
   kind?: string;
   status?: string;
   stage_date?: string;
+  /** 計画尺（秒）。型（types.<kind>.seconds）より優先する */
+  target_seconds?: number;
   file?: string;
   youtube_id?: string | null;
   url?: string | null;
   stats?: { views?: number | null; likes?: number | null } | null;
   [k: string]: unknown;
+}
+
+export interface WfCheck {
+  /** 対象の工程（その工程の成果物を検査する） */
+  stage: string;
+  id: string;
+  kind: "presence" | "count" | "words" | "chars" | "contains" | "duration" | "suffix" | "aspect" | "number" | "youtube" | "manual";
+  match?: string;
+  min?: number;
+  max?: number;
+  pattern?: string;
+  note?: string;
+  /** タイプ（casting.yaml の types.<kind>）の aspect / chars / seconds を期待値に使う */
+  from_type?: boolean;
+  /** 尺の許容幅（既定 0.35 = ±35%） */
+  tolerance?: number;
 }
 
 export interface Wf {
@@ -45,6 +63,7 @@ export interface WfDoc {
   artifacts?: Record<string, string[]>;
   repos?: Record<string, string[]>;
   tracker?: string;
+  checks?: WfCheck[];
   library?: Record<string, { path: string; repo: string; seed?: string; done?: string; ledger?: string }>;
   /** 人間が触るのは視聴とダメ出しだけ（企画・制作・投稿は agent） */
   human?: { view?: string; review?: string; sinks?: string[]; outside?: boolean };

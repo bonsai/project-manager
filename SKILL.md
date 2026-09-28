@@ -61,6 +61,23 @@ bun ~/.skills/project-manager/ontology.ts q "SELECT * FROM v_next LIMIT 5"
 - 判定アルゴリズムは `lib/stages.ts` の 1 箇所（`pm.ts` もここを使う）
 - 代表クエリは `data/queries.sql`（スキーマは `data/video-ontology.sql`）
 
+## gate（通過条件）の検査
+
+「ファイルが在るか」ではなく**中身**を見る。定義は `wf.yaml` の `checks`（1 条件 = 1 行）。
+
+```bash
+pm gate                       # 全本 × 全 check の不合成約（どの gate が詰まっているか）
+pm gate typesafe-jev          # 1 本の全 gate
+pm gate typesafe-jev tts      # その工程の gate だけ
+video-ontology q gate-fail     # オントロジ経由で集約
+video-ontology q manual        # 自動判定しない条件（人手で確認）
+```
+
+- kind: `presence` / `count` / `words` / `chars` / `contains` / `duration` / `suffix` / `aspect` / `number` / `youtube` / `manual`
+- `from_type: true` は期待値を `casting.yaml` の `types.<kind>`（`aspect` / `chars` / `seconds`）から取る
+- 尺の期待値は台帳の `target_seconds` が優先（無ければ型の `seconds`、許容 ±35%）
+- `manual` は「通った」扱いにしない（✅/✗/・ の 3 値。例: 画像に文字を焼いていない、RUBRIC 9 軸）
+
 ## 役割分担（人間は視聴とダメ出しだけ）
 
 ```
@@ -90,6 +107,7 @@ video-ontology q human-vs-agent  # 工程の担当（現在は 9/9 が agent）
 
 - `pm.ts` — 検査本体（bun）
 - `lib/stages.ts` — 工程の状態判定（PM とオントロジで共有する唯一の実装）
+- `lib/gates.ts` — gate（通過条件）の検査器。定義は `wf.yaml` の `checks`
 - `ontology.ts` — 動画ドメインのオントロジを組み立てる（`data/video-ontology.db`）
 - `data/video-ontology.sql` — そのスキーマ。`data/queries.sql` — 代表クエリ
 - `diagram.ts` — `wf.yaml`/`casting.yaml` から `pipeline.html`（Mermaid の図）を生成

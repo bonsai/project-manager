@@ -14,6 +14,7 @@
 import { existsSync, readdirSync, statSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { expandHome, loadWfDoc, short, stageState, type StageRow, type Video, type WfDoc } from "./lib/stages";
+import { runChecks, type CheckResult } from "./lib/gates";
 
 const HERE = import.meta.dir;
 const canonical = process.env.VIDEOMAN_JSONL ?? join(HERE, "data/videos.jsonl");
@@ -106,6 +107,60 @@ function buildDashboards(): void {
   }
 }
 
+// ── gate（通過条件）の検査。定義は wf.yaml の checks
+const types = castTypes();
+function castTypes(): Record<string, { aspect?: string; chars?: [number, number]; seconds?: number }> {
+  try {
+    const c = Bun.YAML.parse(readFileSync(join(HERE, "casting.yaml"), "utf8")) as {
+      types?: Record<string, { aspect?: string; chars?: [number, number]; seconds?: number }>;
+    };
+    return c.types ?? {};
+  } catch {
+    return {};
+  }
+}
+const checksOf = () => doc.checks ?? [];
+const checkVideo = (v: Video) => runChecks(v, doc, checksOf(), types);
+
+function cmdGate(argv: string[]): void {
+  const [slugArg, stageArg] = argv.filter((a) => !a.startsWith("-"));
+  const videos = loadVideos();
+  const targets = slugArg ? videos.filter((v) => v.slug === slugArg || v.no === slugArg) : videos;
+  if (slugArg && targets.length === 0) { console.error(`見つからない: ${slugArg}`); process.exit(1); }
+  const picked = stageArg ? checksOf().filter((c) => c.stage === stageArg) : checksOf();
+  if (picked.length === 0) { console.error(`check が無い: ${stageArg ?? "(wf.yaml の checks)"}`); process.exit(1); }
+
+  const tally = new Map<string, { fail: number; manual: number; pass: number }>();
+  for (const v of targets) {
+    const rows = runChecks(v, doc, picked, types);
+    if (slugArg) {
+      console.log(`PM gate: #${v.no} ${v.slug}（${v.kind ?? "?"}）`);
+      for (const r of rows) {
+        const mark = r.ok ? "✅" : r.manual ? "・" : "✗";
+        console.log(`  ${mark} ${r.stage.padEnd(8)} ${r.id.padEnd(20)} ${r.detail}`);
+      }
+    }
+    for (const r of rows) {
+      const t = tally.get(r.id) ?? { fail: 0, manual: 0, pass: 0 };
+      if (r.manual) t.manual++;
+      else if (r.ok) t.pass++;
+      else t.fail++;
+      tally.set(r.id, t);
+    }
+  }
+  if (!slugArg) {
+    console.log(`PM gate（${targets.length} 本 / check ${picked.length} 種）\n`);
+    console.log(`  ${"check".padEnd(20)} ${"工程".padEnd(8)} 不合成約 合格 manual  定義`);
+    for (const c of picked) {
+      const t = tally.get(c.id) ?? { fail: 0, manual: 0, pass: 0 };
+      const mark = t.fail > 0 ? "✗" : t.manual > 0 ? "・" : "✅";
+      console.log(`  ${mark} ${c.id.padEnd(18)} ${c.stage.padEnd(8)} ${String(t.fail).padStart(3)}      ${String(t.pass).padStart(3)}   ${String(t.manual).padStart(3)}  ${c.note ?? ""}`);
+    }
+    const manual = picked.filter((c) => c.kind === "manual");
+    if (manual.length) console.log(`\n・ = 人手で確認（自動判定しない）: ${manual.map((c) => c.id).join(", ")}`);
+  }
+}
+
 const [sub, arg] = process.argv.slice(2);
 
 if (sub === "plan") {
@@ -146,6 +201,8 @@ if (sub === "plan") {
   }
   console.log(`\ntracker: ${doc.tracker ?? "（未設定）"}  → 起票は orchestrator`);
   console.log(`人間の関所: 視聴 / ダメ出し（${(doc.human?.sinks ?? ["reviews.jsonl"]).join(", ")}）。企画・制作・投稿は agent`);
+} else if (sub === "gate") {
+  cmdGate(process.argv.slice(3));
 } else if (sub === "dashboards") {
   buildDashboards();
   const noOpen = process.argv.includes("--no-open");
@@ -175,6 +232,17 @@ if (sub === "plan") {
   const rows = check(v);
   console.log(`PM: #${v.no} ${v.slug}  ${v.title ?? ""}`);
   for (const r of rows) console.log(`  ${r.ok ? "✅" : "・"} ${r.id.padEnd(8)} ${(nameOf.get(r.id) ?? "").padEnd(6)} ${r.ref}`);
+  const gate = checkVideo(v).filter((r) => v.youtube_id || true);
+  const bad = gate.filter((r) => !r.ok && !r.manual);
+  const man = gate.filter((r) => r.manual);
+  if (bad.length) {
+    console.log(`\ngate 不合格（${bad.length}）:`);
+    for (const r of bad) console.log(`  ✗ ${r.stage.padEnd(8)} ${r.id.padEnd(20)} ${r.detail}`);
+  }
+  if (man.length) {
+    console.log(`\ngate 人手で確認（${man.length}）:`);
+    for (const r of man) console.log(`  ・ ${r.stage.padEnd(8)} ${r.id.padEnd(20)} ${r.detail}`);
+  }
   const next = rows.find((r) => !r.ok);
   console.log(`\n次の一手: ${next ? `${next.id}（${nameOf.get(next.id)}）` : "全工程 完了"}`);
 } else {
