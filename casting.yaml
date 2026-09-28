@@ -21,8 +21,9 @@ defaults:
   se:      { agent: se-synth,   model: local,               token: "" }
   mux:     { agent: lumiere,    model: local,               token: "" }
   metrics: { agent: metrics,    model: yt-dlp,              token: "" }
-  stt:     { agent: stt,        model: deepgram,            token: DEEPGRAM_API_KEY }
   qc:      { agent: qc,         model: nvidia-nim,          token: NVIDIA_API_KEY }
+# メモ: 文字起こし（stt / deepgram / DEEPGRAM_API_KEY）は別プロジェクト
+#   ~/.skills/SHITAGAKI（下書き）で使う。ここ（動画）では tts（Sakura）を使う。
 
 # ── 動画タイプ別 ──────────────────────────────────────
 types:

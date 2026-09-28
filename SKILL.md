@@ -58,11 +58,11 @@ bun ~/.skills/project-manager/pm.ts wf         # WF 一覧
 | SE | `se-synth` | local | - |
 | 結合 mux | `lumiere` | local | - |
 | 統計 metrics | `metrics` | yt-dlp | - |
-| 文字起こし stt | `stt` | `deepgram` | DEEPGRAM_API_KEY |
 | 検証 qc | `qc` | `nvidia-nim` | NVIDIA_API_KEY |
 
 - 鍵は env 名だけ書く（値は repo に置かない）。
 - タイプ: `essay`（横 long）/ `short`（縦）/ `koma`（4 コマ）/ `explainer`（repo 解説）。
+- 文字起こし（stt / deepgram）は**別プロジェクト `~/.skills/SHITAGAKI`（下書き）**で使う。ここでは tts（Sakura）を使う。
 
 ## WF ↔ repo
 
