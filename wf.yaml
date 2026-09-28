@@ -1,13 +1,16 @@
-# wf.yaml — 工程（WF）と成果物の在り処。
+# wf.yaml — 工程（WF）と成果物・担当。
 #
 # 正: ~/.skills/video-studio/contract/index.yaml の flow。
 # 索引は issue（wf:<id> ラベル）、成果物はファイル。issue は持ち主の repo に置く。
-# ダッシュボードはこの 1 枚と issue/ファイルを読むだけ（domain は触らない）。
+# PM/オーケストレーターはこの 1 枚と issue/ファイルを読むだけ（domain は触らない）。
 version: 1
 updated: 2026-09-28
 
 # 制作〜追尾の順。前段（channel/target/ip/voice/imagen）は設定で固定。
 flow: [neta, script, tts, prompt, image, se, mux, deploy, metrics]
+
+# issue の作成先（tracker）。--repo / env VIDEOMAN_TRACKER で上書き。
+tracker: bonsai/kanalvideo-analysis
 
 # 供給元（library）。パスは直書きせずここで参照し、config で差し替えられる。
 library:
@@ -20,12 +23,15 @@ library:
     done: '<series>/#NN-*.md' # 完成 = 系列フォルダ
     actions: [talkscript-write, talkscript-audit, hall-eval]
 
+# 担当: who=human|agent / agent=エージェント名 / outside=出先（スマホ）でできるか
 wfs:
   - id: neta
     name: ネタワード
     produces: '<slug>/neta.md'
     labels: [wf:neta]
     gate: ワードが N 語ある
+    who: human
+    outside: true
   - id: script
     name: 台本
     library: script
@@ -33,41 +39,57 @@ wfs:
     labels: [wf:script, series:<series>]
     gate: 600-700字（90秒）/ RUBRIC 9軸
     states: [seed, review, done]
+    who: agent
+    agent: lumiere
   - id: tts
     name: 読み上げ
     produces: 'talk.mp3'
     labels: [wf:tts]
     gate: mp3 が在る
+    who: agent
+    agent: lumiere
   - id: prompt
     name: 画像プロンプト
     produces: 'prompts.yaml'
     labels: [wf:prompt]
     gate: 枚数ぶん在る
+    who: agent
+    agent: lumiere
   - id: image
     name: 画像
     produces: 'images/*.png'
     labels: [wf:image]
     gate: 全枚数・文字を焼いていない
+    who: agent
+    agent: image-gen
   - id: se
     name: SE
     produces: 'se/*.wav'
     labels: [wf:se]
     gate: 素材を持たず合成する
+    who: agent
+    agent: se-synth
   - id: mux
     name: 結合動画
     produces: '*-final.mp4'
     labels: [wf:mux]
     gate: -final で終わる・尺
+    who: agent
+    agent: lumiere
   - id: deploy
     name: デプロイ
     produces: youtube_id / MEGA
     labels: [wf:deploy]
     gate: private→公開の手順
+    who: human
+    outside: true
   - id: metrics
     name: 統計
     produces: 'stats.json'
     labels: [wf:metrics]
     gate: 数値が在る
+    who: agent
+    agent: metrics
 
 # 成果物を探す場所（root 相対。{slug} 展開、glob 可）
 # PM はここを見て「どの工程まで来ているか」を判定する。

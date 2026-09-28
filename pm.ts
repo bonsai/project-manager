@@ -29,16 +29,26 @@ interface Video {
 }
 interface WfDoc {
   flow: string[];
-  wfs: Array<{ id: string; name: string }>;
+  wfs: Array<{ id: string; name: string; who?: "human" | "agent"; agent?: string; outside?: boolean }>;
   roots?: Record<string, string>;
   artifacts?: Record<string, string[]>;
+  tracker?: string;
   library?: Record<string, { path: string; repo: string; seed?: string; done?: string; ledger?: string }>;
 }
 
 const doc = Bun.YAML.parse(readFileSync(join(HERE, "wf.yaml"), "utf8")) as WfDoc;
 const nameOf = new Map(doc.wfs.map((w) => [w.id, w.name]));
+const wfOf = new Map(doc.wfs.map((w) => [w.id, w]));
 const roots = doc.roots ?? {};
 const arts = doc.artifacts ?? {};
+
+// 担当の表示（human / agent名 / 出先）
+function who(id: string): string {
+  const w = wfOf.get(id);
+  if (!w) return "-";
+  if (w.who === "human") return w.outside ? "人間（出先・スマホ）" : "人間";
+  return `agent: ${w.agent ?? "?"}`;
+}
 
 function loadVideos(): Video[] {
   if (!existsSync(canonical)) return [];
@@ -111,7 +121,30 @@ function boardScript(lib: { path: string; repo: string; seed?: string; done?: st
 
 const [sub, arg] = process.argv.slice(2);
 
-if (sub === "wf") {
+if (sub === "plan") {
+  const videos = loadVideos();
+  const tally = new Map<string, number>();
+  let okAll = 0;
+  let cellsAll = 0;
+  console.log("PM plan — 進捗と残タスク\n");
+  for (const v of videos) {
+    const rows = check(v);
+    const ok = rows.filter((r) => r.ok).length;
+    okAll += ok;
+    cellsAll += rows.length;
+    for (const r of rows) if (!r.ok) tally.set(r.id, (tally.get(r.id) ?? 0) + 1);
+    const next = rows.find((r) => !r.ok);
+    const pct = ((ok / rows.length) * 100).toFixed(0).padStart(3);
+    console.log(`  ${pct}%  ${v.no.padStart(3)} ${v.slug.padEnd(30)} ${next ? `次: ${next.id}（${who(next.id)}）` : "完了"}`);
+  }
+  console.log(`\n全体: ${((okAll / cellsAll) * 100).toFixed(1)}%（${okAll}/${cellsAll}）`);
+  console.log("\n残タスク（工程別 → 担当）:");
+  for (const id of doc.flow) {
+    const n = tally.get(id) ?? 0;
+    if (n) console.log(`  ${id.padEnd(8)} ${(nameOf.get(id) ?? "").padEnd(6)} ${String(n).padStart(2)} 件   ${who(id)}`);
+  }
+  console.log(`\ntracker: ${doc.tracker ?? "（未設定）"}  → 起票は orchestrator`);
+} else if (sub === "wf") {
   if (!arg) {
     console.log("WF 一覧:");
     for (const w of doc.wfs) console.log(`  ${w.id.padEnd(8)} ${w.name}`);
