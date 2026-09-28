@@ -11,9 +11,9 @@
 //   pm index        3 枚を束ねた index.html を作って開く
 //
 // 定義は同じディレクトリの wf.yaml、台帳は data/videos.jsonl（env VIDEOMAN_JSONL で差し替え）。
-import { existsSync, readdirSync, statSync, readFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { expandHome, loadWfDoc, short, stageState, type StageRow, type Video, type WfDoc } from "./lib/stages";
+import { HOME, expandHome, loadWfDoc, short, stageState, type StageRow, type Video, type WfDoc } from "./lib/stages";
 import { runChecks, type CheckResult } from "./lib/gates";
 
 const HERE = import.meta.dir;
@@ -72,6 +72,103 @@ function boardScript(lib: { path: string; repo: string; seed?: string; done?: st
     const list = existsSync(join(root, s)) ? readdirSync(join(root, s)).filter((f) => /^#\d+.*\.md$/.test(f)) : [];
     console.log(`  ${s}: ${list.length} 件${list.length ? "  " + list.join(", ") : ""}`);
   }
+}
+
+// ── crawl: 台帳 + 成果物 + 実体ファイルを巡回検査する（cron 用）
+const MEGA = process.env.KANAL_MEGA ?? "/mnt/c/Users/dance/Documents/MEGA";
+const STATUSES = ["idea", "script", "audio", "video", "ready", "uploaded", "held", "dropped"];
+
+function expectedName(v: Video): string | null {
+  if (!v.file) return null;
+  const ext = String(v.file).split(".").pop() ?? "";
+  return `${v.no}-${v.slug}__${v.status}__${String(v.stage_date ?? "").replace(/-/g, "")}.${ext}`;
+}
+
+function crawlVideo(v: Video) {
+  const issues: string[] = [];
+  const st = stageState(v, doc);
+  const reached = st.filter((r) => r.ok).length;
+
+  // 1) 台帳の file の実体（MEGA）
+  if (v.file) {
+    const path = join(MEGA, String(v.file));
+    if (!existsSync(path)) issues.push(`file の実体が MEGA に無い: ${v.file}`);
+    const want = expectedName(v)!;
+    if (v.file !== want) issues.push(`命名が規約と違う: ${v.file} → ${want}`);
+  } else if (v.status && !["idea", "held", "dropped"].includes(String(v.status))) {
+    issues.push(`status=${v.status} なのに file が空`);
+  }
+
+  // 2) deploy / metrics の整合
+  if (v.status === "uploaded" && !v.youtube_id) issues.push("uploaded だが youtube_id が無い");
+  if (v.status === "ready" && v.youtube_id) issues.push("ready だが youtube_id がある（status が遅れている）");
+  const fetched = (v.stats as { fetched_at?: string } | null)?.fetched_at;
+  if (v.youtube_id && !fetched) issues.push("公開済みだが stats.fetched_at が無い（metrics 未取得）");
+  if (v.youtube_id && fetched) {
+    const days = (Date.now() - Date.parse(fetched)) / 86400000;
+    if (days > 7) issues.push(`stats が古い: ${fetched}（${Math.floor(days)} 日前）`);
+  }
+  if (v.status && !STATUSES.includes(String(v.status))) issues.push(`未知の status: ${v.status}`);
+
+  // 3) 到達済みなのに次の工程が無い（成果物の抜け）
+  const next = st.find((r) => !r.ok);
+  if (!next && !v.youtube_id) issues.push("9 工程すべて到達だが未公開（deploy の記録漏れ？）");
+
+  // 4) gate（中身）
+  const gateBad = runChecks(v, doc, doc.checks ?? [], types).filter((c) => !c.ok && !c.manual);
+
+  return { slug: v.slug, no: v.no, status: v.status, reached, total: doc.flow.length, issues, gateFail: gateBad.map((g) => `${g.id}: ${g.detail}`) };
+}
+
+function cmdCrawl(argv: string[]): void {
+  const asJson = argv.includes("--json");
+  const write = argv.includes("--write");
+  const quiet = argv.includes("--quiet");
+  const videos = loadVideos();
+  const seen = new Set<string>();
+  const results = videos.map((v) => {
+    const r = crawlVideo(v);
+    if (seen.has(v.slug)) r.issues.push("slug が重複");
+    seen.add(v.slug);
+    if (!v.no) r.issues.push("no が空");
+    return r;
+  });
+  const okCount = results.filter((r) => r.issues.length === 0).length;
+  const issueCount = results.reduce((a, r) => a + r.issues.length, 0);
+  const gateCount = results.reduce((a, r) => a + r.gateFail.length, 0);
+  const snapshot = {
+    generated_at: new Date().toISOString(),
+    ledger: canonical.replace(HOME, "~"),
+    mega: MEGA,
+    summary: { videos: videos.length, clean: okCount, issues: issueCount, gate_fail: gateCount },
+    videos: results,
+  };
+
+  if (write) {
+    const dir = join(HERE, "state");
+    // state はディレクトリなので mkdir が要る（無ければ作る）
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, "crawl-latest.json"), JSON.stringify(snapshot, null, 2));
+    appendFileSync(join(dir, "crawl.jsonl"), JSON.stringify({ ts: snapshot.generated_at, ...snapshot.summary }) + "\n");
+  }
+
+  if (asJson) {
+    console.log(JSON.stringify(snapshot, null, 2));
+    process.exit(issueCount > 0 ? 1 : 0);
+  }
+  if (quiet) {
+    console.log(`${snapshot.generated_at.slice(0, 16)} crawl: 本 ${videos.length} / 問題 ${issueCount} 件（${results.length - okCount} 本）/ gate 不合 ${gateCount}`);
+    process.exit(issueCount > 0 ? 1 : 0);
+  }
+  console.log(`PM crawl — 台帳 ${snapshot.ledger} / MEGA ${MEGA}\n`);
+  for (const r of results) {
+    const mark = r.issues.length === 0 ? "✅" : "✗";
+    console.log(`${mark} ${String(r.no).padStart(3)} ${String(r.slug).padEnd(32)} ${r.reached}/${r.total}  ${r.issues.length ? `問題 ${r.issues.length} / gate 不合 ${r.gateFail.length}` : "問題なし"}`);
+    for (const i of r.issues) console.log(`     ! ${i}`);
+  }
+  console.log(`\n合計: 本 ${videos.length} / 問題なし ${okCount} 本 / 問題 ${issueCount} 件 / gate 不合 ${gateCount} 件`);
+  if (write) console.log(`記録: state/crawl-latest.json, state/crawl.jsonl`);
+  process.exit(issueCount > 0 ? 1 : 0);
 }
 
 // ── ダッシュボード（progress / pipeline / script）を生成してブラウザで開く
@@ -201,6 +298,8 @@ if (sub === "plan") {
   }
   console.log(`\ntracker: ${doc.tracker ?? "（未設定）"}  → 起票は orchestrator`);
   console.log(`人間の関所: 視聴 / ダメ出し（${(doc.human?.sinks ?? ["reviews.jsonl"]).join(", ")}）。企画・制作・投稿は agent`);
+} else if (sub === "crawl") {
+  cmdCrawl(process.argv.slice(3));
 } else if (sub === "gate") {
   cmdGate(process.argv.slice(3));
 } else if (sub === "dashboards") {

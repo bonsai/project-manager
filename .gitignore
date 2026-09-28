@@ -1,2 +1,6 @@
 node_modules/
 data/video-ontology.db
+state/crawl-latest.json
+state/crawl.jsonl
+state/crawl.log
+dash-thumbs/

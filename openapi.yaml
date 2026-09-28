@@ -49,6 +49,17 @@ paths:
       parameters:
         - {name: json, in: query, schema: {type: boolean}, x-cli: {flag: --json}}
       responses: {'200': {description: テキスト、または --json で機械可読 JSON}}
+  /crawl:
+    get:
+      operationName: crawl
+      operationId: crawl
+      summary: 台帳・成果物・実体ファイル（MEGA）まで巡回検査する。問題があれば exit 1（cron 用）
+      tags: [audit]
+      parameters:
+        - {name: json, in: query, schema: {type: boolean}, x-cli: {flag: --json}}
+        - {name: write, in: query, schema: {type: boolean}, x-cli: {flag: --write}}
+        - {name: quiet, in: query, schema: {type: boolean}, x-cli: {flag: --quiet}}
+      responses: {'200': {description: 検査結果}, '1': {description: 問題あり}}
   /gate:
     get:
       operationId: gate

@@ -32,6 +32,14 @@
 - 工程の有無は台帳ではなく成果物ファイル（`wf.yaml` の roots × artifacts を glob）。例外は `deploy`=`youtube_id` / `metrics`=`stats.views`。
 - 派生（SQLite `pipeline.db` / HTML / BQ）は `kanalvideo-analysis` 側に残す。
 
+## crawl（巡回検査・作成済み）
+
+`pm crawl` が台帳 + 成果物 + 実体ファイル（MEGA）+ 整合を 1 周する。`--write` で `state/crawl-latest.json` と `state/crawl.jsonl`（履歴）に記録。問題があれば exit 1。
+
+- cron 登録済み（2026-09-29、6 時間毎 `17 */6 * * *`）。ログは `state/crawl.log`。PATH に依存しないよう `bun` は絶対パス、`env -i` での実走も確認
+- 初回の実測: 13 本中 9 本クリーン、問題 4 件 → `ai-dev-5stages` / `star1-30s`（status=script なのに file 空）、`yt-YdnZICIRgO8` / `yt-PbENAC6-kao`（status=uploaded なのに file 空＝チャンネル取り込み）
+- gate 不合格 129 件（主に未制作の本の成果物不足）
+
 ## gate（通過条件）の検査（作成済み）
 
 `wf.yaml` の `checks`（15 種）を `lib/gates.ts` が実行する。presence だけでなく中身を見る。
@@ -58,6 +66,7 @@
 
 ## ISSUE_LOG
 
+- 2026-09-29 `pm crawl` を追加（MEGA の実体・命名・status の整合・gate を 1 周）。cron 6h 毎に登録し、`state/crawl.jsonl` に履歴を残す。初回で 4 件のドリフトを検出。
 - 2026-09-29 gate を「在るか」から「中身」へ: `wf.yaml` に `checks` 15 種、`lib/gates.ts`（語数・字数・枚数・尺・aspect・命名・数値・manual）、`pm gate`、オントロジ `gate_checks`/`stage_check`/`v_gate_fail`、dash の gate 表。尺の期待値は台帳 `target_seconds` を追加して優先。
 - 2026-09-29 役割分担を型に反映: neta/deploy を agent へ移し、人間は視聴（view）とダメ出し（review）のみに。`wf.yaml` の `human:`、`casting.yaml` の `roles`、オントロジの `gate` ノードとクエリ `human` / `human-vs-agent`、dash の「人間が触るところ」を追加。
 - 2026-09-29 `openapi.yaml` を追加し、`~/.local/bin/pm` / `video-ontology` を張る `scripts/install.sh` を追加。壊れていた `~/.skills/cli/registry/videoman.yaml` も貼り直した。

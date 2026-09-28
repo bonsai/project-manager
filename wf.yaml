@@ -117,27 +117,33 @@ artifacts:
     - 'data/programs/{slug}/kikaku.md'
     - 'projects/*{slug}*.md'
   script:
+    - 'out/*/{slug}*script*.md'
     - 'data/programs/{slug}/script.md'
     - 'content/{slug}/speech*.md'
     - '*/*{slug}*.md'
     - '*/*{slug}*thumb*prompt*'
     - 'data/programs/{slug}/thumb-prompt*'
   tts:
+    - 'out/*/{slug}*talk*.mp3'
     - 'data/audio/{slug}/*.mp3'
     - 'tts/*{slug}*.mp3'
     - 'out/{slug}/*talk*.mp3'
   prompt:
+    - 'out/*/{slug}*prompt*.yaml'
     - 'data/programs/{slug}/prompts.yaml'
     - 'out/{slug}/*prompt*.yaml'
   image:
+    - 'out/*/{slug}*image*.*'
     - 'data/{slug}/*.png'
     - 'out/{slug}/*image*.*'
     - 'out/{slug}/*thumb*.*'
     - 'data/{slug}/thumbnail.png'
   se:
+    - 'out/*/{slug}*se*.wav'
     - 'out/{slug}/se/*.wav'
     - 'out/{slug}/*se*.wav'
   mux:
+    - 'out/*/{slug}*-final.mp4'
     - 'data/{slug}/motion/*.mp4'
     - 'videos/*{slug}*.mp4'
     - 'out/{slug}/*-final.mp4'
@@ -188,7 +194,8 @@ checks:
     kind: duration
     match: "*.mp3"
     from_type: true
-    note: 尺が想定内
+    tolerance: 0.7 # 収録は遅めに取って mux で詰める運用（30s 収録→atempo で 30s）。実尺の担保は mux-duration
+    note: 収録の尺が想定内（詰めは mux で）
   - id: prompt-count
     stage: prompt
     kind: count
@@ -198,13 +205,13 @@ checks:
   - id: image-count
     stage: image
     kind: count
-    match: "*.png"
+    match: "*.{png,jpg,jpeg}"
     min: 1
     note: 全枚数
   - id: image-aspect
     stage: image
     kind: aspect
-    match: "*.png"
+    match: "*.{png,jpg,jpeg}"
     from_type: true
     note: タイプの aspect
   - id: image-no-text

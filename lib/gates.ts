@@ -114,8 +114,10 @@ export function runChecks(
       case "chars": {
         const body = readText(matched[0]!).replace(/\s+/g, "");
         const n = body.length;
-        const lo = (c.from_type ? typeSpec.chars?.[0] : undefined) ?? c.min ?? 0;
-        const hi = (c.from_type ? typeSpec.chars?.[1] : undefined) ?? c.max ?? Number.MAX_SAFE_INTEGER;
+        // 字数は計画尺から導く（実測 5.3-5.4 字/秒をカバーする 4.0-7.5 字/秒）
+        const t = c.from_type ? v.target_seconds : undefined;
+        const lo = (t ? Math.round(t * 4.0) : undefined) ?? (c.from_type ? typeSpec.chars?.[0] : undefined) ?? c.min ?? 0;
+        const hi = (t ? Math.round(t * 7.5) : undefined) ?? (c.from_type ? typeSpec.chars?.[1] : undefined) ?? c.max ?? Number.MAX_SAFE_INTEGER;
         if (n >= lo && n <= hi) pass(`${n} 字`);
         else fail(`${n} 字（期待 ${lo}-${hi === Number.MAX_SAFE_INTEGER ? "∞" : hi} 字）`);
         break;

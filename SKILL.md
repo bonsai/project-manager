@@ -61,6 +61,28 @@ bun ~/.skills/project-manager/ontology.ts q "SELECT * FROM v_next LIMIT 5"
 - 判定アルゴリズムは `lib/stages.ts` の 1 箇所（`pm.ts` もここを使う）
 - 代表クエリは `data/queries.sql`（スキーマは `data/video-ontology.sql`）
 
+## crawl（巡回検査・cron）
+
+台帳・成果物の有無だけでなく、**実体ファイル（MEGA）と整合**まで見る。cron から回す前提で exit 1 を返す。
+
+```bash
+pm crawl                  # 全本。問題があれば exit 1
+pm crawl --json           # 機械可読
+pm crawl --write --quiet  # state/crawl-latest.json + state/crawl.jsonl に記録（1 行サマリ）
+```
+
+見るもの:
+- 台帳の `file` が MEGA に実在するか／命名が `<no>-<slug>__<status>__<YYYYMMDD>.<ext>` か
+- `status` と `file` / `youtube_id` / `stats.fetched_at` の整合（例: uploaded なのに youtube_id 無し、stats が 7 日以上古い）
+- 9 工程すべて到達なのに未公開、slug 重複、`no` の欠落
+- gate（中身）の不合格数
+
+cron（2026-09-29 追加、6 時間毎）:
+
+```
+17 */6 * * * cd /home/sexy/.skills/project-manager && /home/sexy/.bun/bin/bun pm.ts crawl --write --quiet >> /home/sexy/.skills/project-manager/state/crawl.log 2>&1
+```
+
 ## gate（通過条件）の検査
 
 「ファイルが在るか」ではなく**中身**を見る。定義は `wf.yaml` の `checks`（1 条件 = 1 行）。
