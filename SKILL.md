@@ -32,6 +32,24 @@ bun ~/.skills/project-manager/pm.ts wf script  # 台本部ボード（seed / rev
 bun ~/.skills/project-manager/pm.ts wf         # WF 一覧
 ```
 
+## オントロジ（動画ドメイン）
+
+9 工程・動画タイプ・キャスト・repo・台帳を 1 つの関係グラフにしたもの（派生 DB）。
+正は `wf.yaml` / `casting.yaml` / `data/videos.jsonl` / `data/SCHEMA.md` で、DB は作り直せる。
+
+```bash
+bun ~/.skills/project-manager/ontology.ts build      # data/video-ontology.db を再生成
+bun ~/.skills/project-manager/ontology.ts queries    # 代表クエリ一覧
+bun ~/.skills/project-manager/ontology.ts q missing  # 工程別の未達数
+bun ~/.skills/project-manager/ontology.ts q "SELECT * FROM v_next LIMIT 5"
+```
+
+- 型付きテーブル: `stages` / `repos` / `types` / `cast_roles` / `type_cast` / `vocab` / `ledger_fields` / `videos`
+- 汎用グラフ: `nodes`（134）/ `edges`（186）。rel は `uses` / `produces` / `stored_in` / `cast_as` / `runs_on` / `needs_key` / `has_status` / `of_type` / `in_series` / `reached`
+- 状態: `stage_state`（毎回作り直す）+ ビュー `v_progress` / `v_missing` / `v_next`
+- 判定アルゴリズムは `lib/stages.ts` の 1 箇所（`pm.ts` もここを使う）
+- 代表クエリは `data/queries.sql`（スキーマは `data/video-ontology.sql`）
+
 ## 責務の境界
 
 | やること | やらないこと（持ち主） |
@@ -43,6 +61,9 @@ bun ~/.skills/project-manager/pm.ts wf         # WF 一覧
 ## ファイル
 
 - `pm.ts` — 検査本体（bun）
+- `lib/stages.ts` — 工程の状態判定（PM とオントロジで共有する唯一の実装）
+- `ontology.ts` — 動画ドメインのオントロジを組み立てる（`data/video-ontology.db`）
+- `data/video-ontology.sql` — そのスキーマ。`data/queries.sql` — 代表クエリ
 - `diagram.ts` — `wf.yaml`/`casting.yaml` から `pipeline.html`（Mermaid の図）を生成
 - `board.ts` — 台本部（script WF）を `script.html` にする（seed / PR / issue / 完成）
 - `pipeline.html` / `script.html` — 生成物

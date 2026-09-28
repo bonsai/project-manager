@@ -10,33 +10,13 @@
 //
 // 定義は同じディレクトリの wf.yaml、台帳は data/videos.jsonl（env VIDEOMAN_JSONL で差し替え）。
 import { existsSync, readdirSync, statSync, readFileSync } from "node:fs";
-import { homedir } from "node:os";
 import { join } from "node:path";
+import { expandHome, loadWfDoc, short, stageState, type StageRow, type Video, type WfDoc } from "./lib/stages";
 
 const HERE = import.meta.dir;
-const HOME = homedir();
 const canonical = process.env.VIDEOMAN_JSONL ?? join(HERE, "data/videos.jsonl");
 
-const expandHome = (p: string) => (p.startsWith("~") ? join(HOME, p.slice(1)) : p);
-const short = (p: string) => p.replace(HOME, "~");
-
-interface Video {
-  no: string;
-  slug: string;
-  title?: string;
-  youtube_id?: string | null;
-  stats?: { views?: number | null };
-}
-interface WfDoc {
-  flow: string[];
-  wfs: Array<{ id: string; name: string; who?: "human" | "agent"; agent?: string; outside?: boolean }>;
-  roots?: Record<string, string>;
-  artifacts?: Record<string, string[]>;
-  tracker?: string;
-  library?: Record<string, { path: string; repo: string; seed?: string; done?: string; ledger?: string }>;
-}
-
-const doc = Bun.YAML.parse(readFileSync(join(HERE, "wf.yaml"), "utf8")) as WfDoc;
+const doc = loadWfDoc(join(HERE, "wf.yaml"));
 const nameOf = new Map(doc.wfs.map((w) => [w.id, w.name]));
 const wfOf = new Map(doc.wfs.map((w) => [w.id, w]));
 const roots = doc.roots ?? {};
@@ -58,35 +38,7 @@ function loadVideos(): Video[] {
     .map((l) => JSON.parse(l) as Video);
 }
 
-// roots × artifacts を {slug} 展開して glob する
-function resolveArtifact(slug: string): Record<string, string[]> {
-  const out: Record<string, string[]> = {};
-  for (const id of doc.flow) out[id] = [];
-  for (const rel of Object.values(roots)) {
-    const base = expandHome(rel);
-    if (!existsSync(base)) continue;
-    for (const [id, patterns] of Object.entries(arts)) {
-      for (const pat of patterns ?? []) {
-        try {
-          for (const f of new Bun.Glob(pat.replace(/\{slug\}/g, slug)).scanSync({ cwd: base, onlyFiles: true })) {
-            (out[id] ??= []).push(join(base, f));
-          }
-        } catch { /* 不正な glob は無視 */ }
-      }
-    }
-  }
-  return out;
-}
-
-function check(v: Video): Array<{ id: string; ok: boolean; ref: string }> {
-  const files = resolveArtifact(v.slug);
-  return doc.flow.map((id) => {
-    if (id === "deploy") return { id, ok: Boolean(v.youtube_id), ref: v.youtube_id ?? "" };
-    if (id === "metrics") return { id, ok: typeof v.stats?.views === "number", ref: v.stats?.views != null ? `${v.stats.views} views` : "" };
-    const f = files[id]?.[0];
-    return { id, ok: Boolean(f), ref: f ? short(f) : "" };
-  });
-}
+const check = (v: Video): StageRow[] => stageState(v, doc);
 
 function boardScript(lib: { path: string; repo: string; seed?: string; done?: string; ledger?: string }): void {
   const root = expandHome(lib.path);
